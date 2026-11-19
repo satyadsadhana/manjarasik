@@ -1,106 +1,50 @@
-# 🔲 Kotak Rahasia
+# Kota Aksara
 
-**Kirim dan pecahkan pesan rahasia dengan Polybius Square, lalu adu cepat di game _Tebak Pesan_.**
-
-Website satu halaman untuk tugas *Exercise* TM12 Cryptography, mata kuliah Manajemen Jaringan, FTMM Universitas Airlangga. Algoritma yang dipakai, **Polybius Square dengan kata kunci**, tidak dibahas di materi kuliah.
-
-> HTML, CSS, dan JavaScript murni: tanpa framework, tanpa build, tanpa install. Bisa dibuka dengan double-click.
-
----
-
-## Fitur
-
-| Bagian | Isi |
-|---|---|
-| **Cara Kerja** | Penjelasan 3 langkah dengan contoh kata kunci `UNAIR`, plus sejarah singkat Polybius. |
-| **Lab** | Mode *Kirim Pesan* (enkripsi) dan *Pecahkan Pesan* (dekripsi). Hasil langsung muncul saat mengetik, dan sel kotak 5×5 yang dipakai ikut menyala. Ada tombol salin dan tukar. |
-| **Game Tebak Pesan** | Dimainkan bergantian di satu laptop. Ada 3 level, timer, petunjuk berbayar poin, dan konfeti kalau berhasil. |
-| **Panel Host** | Tempat menambah soal sendiri (pesan, kata kunci, level). |
-| **Papan Skor** | Podium 3 besar dan peringkat sampai 10. Skor pemain dengan nama yang sama digabung. |
-
-## Cara kerja Polybius Square
-
-1. **Susun kotak 5×5.** Huruf kata kunci ditulis lebih dulu (tanpa huruf ganda), lalu sisa alfabet. Karena cuma ada 25 sel, **J digabung ke I**.
-2. **Ganti tiap huruf dengan nomor baris dan kolomnya.**
-3. **Gabungkan.** Huruf dipisah spasi, kata dipisah ` / `.
-
-Contoh dengan kata kunci `UNAIR`:
-
-```
-     1 2 3 4 5
-  1  U N A I R
-  2  B C D E F
-  3  G H K L M        HALO  →  32 13 34 41
-  4  O P Q S T
-  5  V W X Y Z
-```
-
-Angka dan `/` di pesan asli dibungkus kurung siku supaya tidak tertukar dengan koordinat. Contohnya `TM12` dienkripsi jadi `44 32 [12]` dengan kotak standar.
-
-## Aturan game
-
-| Level | Skor dasar | Kotak |
-|---|---|---|
-| Mudah | 500 | Kotak standar, terbuka penuh |
-| Sedang | 1000 | Pakai kata kunci, panjang kunci ditampilkan |
-| Sulit | 1500 | Pakai kata kunci, tanpa info |
-
-**Potongan skor:**
-- −5 poin per detik
-- −50 poin per tebakan salah
-- Petunjuk: buka 1 huruf kunci −100, buka 1 baris kotak −150, huruf pertama tiap kata −200
-
-Skor minimum 50 kalau berhasil, dan 0 kalau menyerah. Saat mengecek tebakan, huruf besar/kecil, spasi berlebih, dan J/I tidak dibedakan.
+Buku cerita interaktif tentang penjelajah muda yang mencari Lentera Aksara untuk menyelamatkan kota dari Kabut Sunyi. Revisi dari proyek Kotak Rahasia.
 
 ## Menjalankan
 
-**Cara paling gampang:** download atau clone repo ini, lalu double-click `index.html`.
+Ekstrak ZIP, buka folder `kota-aksara`, lalu klik dua kali `index.html`. Semua gambar dan kode tersedia lokal; tidak perlu instalasi, akun, koneksi internet, atau API.
 
-**Lewat server lokal** (opsional):
+Untuk localhost, buka terminal di folder yang memuat `index.html` lalu jalankan:
+
+```powershell
+python -m http.server 5504
+```
+
+Buka http://localhost:5504 dan biarkan terminal tetap terbuka. Jika Python tidak tersedia, gunakan `index.html` langsung.
+
+## Alur
+
+1. Tentukan nama penjelajah; tokoh default bernama Nara.
+2. Baca empat halaman prolog untuk mengenal tokoh, Elara, ancaman kota, dan tugas mencari lentera.
+3. Pilih lokasi dari peta. Setiap lokasi memiliki adegan cerita, sandi, catatan cara membaca, tiga tingkat petunjuk, dan adegan penemuan kunci.
+4. Kumpulkan keempat kunci dalam urutan bebas. Ruang Fajar terkunci sampai empat kunci ditemukan.
+5. Masuk ke Ruang Fajar, temukan Lentera Aksara, nyalakan, dan baca epilog.
+
+Progres, nama, halaman prolog, dan kunci disimpan melalui localStorage. Penyimpanan terpisah untuk setiap alamat/port/browser. Jika penyimpanan tidak tersedia, aplikasi menampilkan pemberitahuan dan tetap dapat dimainkan selama sesi berlangsung. Reset memiliki dialog konfirmasi. Nama penjelajah bukan akun/login.
+
+## Sandi dan jawaban (untuk pengajar)
+
+| Lokasi | Sandi | Parameter | Pesan | Jawaban |
+|---|---|---|---|---|
+| Menara Angin | Caesar | Geser +3 saat enkripsi | WLPXU | TIMUR |
+| Observatorium | Atbash | A↔Z, B↔Y | YRMGZMT | BINTANG |
+| Taman Akar | Polybius | Kata kunci AKSARA, I/J digabung | 11 12 11 14 | AKAR |
+| Arsip Senja | Vigenère | Kata kunci KOTA, A=0 | ZIEAXU | PULANG |
+
+Sandi klasik di sini digunakan untuk pembelajaran dan bukan untuk melindungi informasi sensitif. Karena aplikasi dijalankan sepenuhnya di browser, jawaban juga berada di kode sumber.
+
+## Desain
+
+Arahan Apple Design dan UI/UX Pro Max: tipografi sistem, hierarki yang jelas, navigasi transparan, kontrol dengan respons saat ditekan, fokus keyboard, ukuran kontrol nyaman, layout adaptif, serta dukungan reduced motion dan reduced transparency. Ilustrasi dunia dibuat dengan AI. Tidak ada timer atau pembelian petunjuk: fokusnya mengikuti cerita dan memahami sandi.
+
+## Pengujian
+
+Dengan Node.js terpasang:
 
 ```bash
-python -m http.server 5500
+node --test tests/*.test.cjs
 ```
 
-Setelah itu buka http://localhost:5500.
-
-Font diambil dari Google Fonts. Kalau offline, halaman tetap jalan dengan font sistem.
-
-## Deploy ke Vercel
-
-Repo ini static site, jadi bisa langsung di-deploy:
-
-1. Di Vercel, pilih **Add New → Project**, lalu impor repo ini.
-2. Pilih Framework Preset **Other**, dan biarkan build command kosong.
-3. Klik **Deploy**.
-
-> ⚠️ Papan skor dan soal buatan disimpan di `localStorage` browser, jadi **tiap perangkat dan tiap alamat punya datanya sendiri**. Untuk presentasi, siapkan soal dan mainkan semuanya di laptop dan alamat yang sama.
-
-## Struktur
-
-```
-index.html          halaman
-style.css           seluruh tampilan (palet krem, navy, teal, mustard, oranye bata)
-js/polybius.js      algoritma: buildGrid, encrypt, decrypt, trace
-js/game-core.js     bank soal, rumus skor, agregasi papan skor
-js/storage.js       akses localStorage yang aman
-js/grid-view.js     render kotak 5×5
-js/hero.js          animasi hero dan contoh Cara Kerja
-js/lab.js           Lab enkripsi/dekripsi
-js/game.js          game Tebak Pesan dan Panel Host
-js/leaderboard.js   papan skor
-js/main.js          titik masuk
-tests/              unit test
-```
-
-## Test
-
-Butuh Node.js 18 atau lebih baru:
-
-```bash
-node --test
-```
-
-## Kelompok
-
-Kelompok ? · Anggota: _(menyusul)_
+Delapan tes mencakup contoh sandi yang diketahui, kotak Polybius, validasi progres, normalisasi jawaban, syarat empat kunci untuk membuka lokasi akhir, serta simulasi alur antarmuka dari prolog sampai epilog dan melanjutkan progres. Simulasi DOM tidak menggantikan pemeriksaan visual pada browser/perangkat pengguna.
