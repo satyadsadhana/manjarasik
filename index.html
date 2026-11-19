@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kotak Rahasia</title>
+  <meta name="description" content="Kirim dan pecahkan pesan rahasia dengan Polybius Square, lalu adu cepat di game Tebak Pesan.">
+  <meta name="theme-color" content="#FFF8EC">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1.5' y='1.5' width='29' height='29' rx='7' fill='%23FFC94A' stroke='%2314213D' stroke-width='3'/%3E%3Cg fill='%2314213D'%3E%3Crect x='8' y='8' width='4' height='4' rx='1'/%3E%3Crect x='14' y='8' width='4' height='4' rx='1'/%3E%3Crect x='20' y='8' width='4' height='4' rx='1'/%3E%3Crect x='8' y='14' width='4' height='4' rx='1'/%3E%3Crect x='20' y='14' width='4' height='4' rx='1'/%3E%3Crect x='8' y='20' width='4' height='4' rx='1'/%3E%3Crect x='14' y='20' width='4' height='4' rx='1'/%3E%3Crect x='20' y='20' width='4' height='4' rx='1'/%3E%3C/g%3E%3Crect x='14' y='14' width='4' height='4' rx='1' fill='%230F9D8A'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#lab">Langsung ke Lab</a>
+
+  <header class="nav">
+    <div class="wrap nav__inner">
+      <a class="brand" href="#hero" aria-label="Kotak Rahasia, ke atas">
+        <span class="brand__mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i></span>
+        <span class="brand__name">Kotak Rahasia</span>
+      </a>
+      <nav class="nav__links" aria-label="Navigasi">
+        <a href="#cara-kerja">Cara Kerja</a>
+        <a href="#lab">Lab</a>
+        <a href="#game">Game</a>
+        <a href="#leaderboard">Papan Skor</a>
+      </nav>
+      <a class="btn btn--mustard btn--sm nav__cta" href="#game">Main</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section id="hero" class="hero">
+      <div class="wrap hero__inner">
+        <div class="hero__copy">
+          <span class="sticker sticker--teal">TM12 · Kriptografi</span>
+          <h1 class="display">Huruf jadi <span class="hl">koordinat</span>, pesan jadi rahasia.</h1>
+          <p class="lead">Polybius Square menaruh alfabet di kotak 5×5. Tiap huruf diganti nomor baris dan kolomnya. Tambah kata kunci, dan cuma yang tahu kuncinya yang bisa membaca.</p>
+          <div class="hero__actions">
+            <a class="btn btn--teal" href="#lab">Coba enkripsi</a>
+            <a class="btn btn--paper" href="#game">Main Tebak Pesan</a>
+          </div>
+        </div>
+        <div class="hero__stage">
+        <div class="hero__demo card card--tilt" aria-label="Contoh enkripsi berjalan">
+          <div class="demo__head">
+            <span class="dot dot--brick"></span><span class="dot dot--mustard"></span><span class="dot dot--teal"></span>
+            <span class="demo__label">kunci: <b>standar</b></span>
+          </div>
+          <div id="heroGrid" class="pgrid-host"></div>
+          <div class="demo__out">
+            <span class="demo__plain" id="heroPlain">HALO DUNIA</span>
+            <span class="demo__arrow" aria-hidden="true">→</span>
+            <code class="demo__code" id="heroCode"></code>
+          </div>
+        </div>
+        </div>
+      </div>
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee__track">
+          <span>23 11 31 34</span><span>HALO</span><span>44 13 35</span><span>TCP</span><span>42 34 45 44 15 42</span><span>ROUTER</span><span>11 32 11 33</span><span>AMAN</span><span>23 11 31 34</span><span>HALO</span><span>44 13 35</span><span>TCP</span><span>42 34 45 44 15 42</span><span>ROUTER</span><span>11 32 11 33</span><span>AMAN</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CARA KERJA -->
+    <section id="cara-kerja" class="section">
+      <div class="wrap">
+        <div class="section__head">
+          <span class="eyebrow">Cara kerja</span>
+          <h2 class="h2">Tiga langkah, satu menit.</h2>
+          <p class="muted">Contoh di bawah pakai kata kunci <b class="mono">UNAIR</b> untuk mengenkripsi kata <b class="mono">HALO</b>.</p>
+        </div>
+        <ol class="steps">
+          <li class="card step step--teal">
+            <span class="step__num">01</span>
+            <h3 class="h3">Susun kotaknya</h3>
+            <p>Tulis huruf kata kunci lebih dulu, tanpa huruf ganda. Sisanya diisi alfabet berurutan.</p>
+            <div id="stepGrid" class="pgrid-host"></div>
+          </li>
+          <li class="card step step--mustard">
+            <span class="step__num">02</span>
+            <h3 class="h3">Cari baris &amp; kolom</h3>
+            <p>Huruf <b class="mono">H</b> ada di baris 3, kolom 2. Jadi <b class="mono">H</b> ditulis <b class="mono">32</b>.</p>
+            <div class="coord" aria-hidden="true">
+              <span class="coord__letter">H</span>
+              <span class="coord__eq">=</span>
+              <span class="coord__pair"><span class="tag tag--row">baris 3</span><span class="tag tag--col">kolom 2</span></span>
+            </div>
+          </li>
+          <li class="card step step--brick">
+            <span class="step__num">03</span>
+            <h3 class="h3">Gabungkan angkanya</h3>
+            <p>Ulangi untuk tiap huruf. Antar kata dipisah garis miring.</p>
+            <div class="chain" aria-label="HALO menjadi 32 13 34 41">
+              <span><b>H</b>32</span><span><b>A</b>13</span><span><b>L</b>34</span><span><b>O</b>41</span>
+            </div>
+          </li>
+        </ol>
+        <div class="facts">
+          <div class="fact"><span class="fact__icon">I=J</span><p>Kotaknya cuma muat 25 huruf, jadi <b>J</b> digabung ke <b>I</b>. Hasil dekripsi selalu menulisnya sebagai I.</p></div>
+          <div class="fact"><span class="fact__icon">±150<small>SM</small></span><p>Diciptakan sejarawan Yunani <b>Polybius</b> untuk mengirim pesan jarak jauh dengan obor: jumlah obor kiri = baris, kanan = kolom.</p></div>
+          <div class="fact"><span class="fact__icon">25!</span><p>Kata kunci mengacak urutan kotak. Tanpa kunci, siapa pun bisa membacanya, jadi kuncinya yang harus dirahasiakan.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LAB -->
+    <section id="lab" class="section section--band">
+      <div class="wrap">
+        <div class="section__head">
+          <span class="eyebrow">Lab</span>
+          <h2 class="h2">Kirim atau pecahkan pesan.</h2>
+        </div>
+        <div class="lab">
+          <div class="card lab__panel">
+            <div class="seg" role="tablist" aria-label="Mode">
+              <button class="seg__btn is-on" role="tab" aria-selected="true" data-mode="enc" id="modeEnc">Kirim Pesan</button>
+              <button class="seg__btn" role="tab" aria-selected="false" data-mode="dec" id="modeDec">Pecahkan Pesan</button>
+              <span class="seg__pill" aria-hidden="true"></span>
+            </div>
+            <label class="field">
+              <span class="field__label">Kata kunci <small>(kosongkan untuk kotak standar)</small></span>
+              <input id="labKey" class="input input--mono" type="text" autocomplete="off" spellcheck="false" placeholder="mis. UNAIR" maxlength="40">
+            </label>
+            <label class="field">
+              <span class="field__label" id="labInLabel">Pesan asli</span>
+              <textarea id="labIn" class="input textarea" rows="3" spellcheck="false" placeholder="Ketik pesanmu di sini..."></textarea>
+            </label>
+            <div class="field">
+              <span class="field__label" id="labOutLabel">Pesan rahasia</span>
+              <output id="labOut" class="result" for="labIn labKey" aria-live="polite"><span class="result__empty">Hasilnya muncul di sini.</span></output>
+              <p id="labErr" class="error" role="alert" hidden></p>
+            </div>
+            <div class="lab__actions">
+              <button id="labCopy" class="btn btn--teal btn--sm" type="button">Salin hasil</button>
+              <button id="labSwap" class="btn btn--paper btn--sm" type="button">Tukar ⇄</button>
+              <span id="labToast" class="toast" aria-live="polite"></span>
+            </div>
+          </div>
+          <div class="card lab__gridcard">
+            <div class="lab__gridhead">
+              <span class="mono small">kotak aktif</span>
+              <span class="legend"><i class="lg lg--used"></i>terpakai <i class="lg lg--active"></i>terakhir</span>
+            </div>
+            <div id="labGrid" class="pgrid-host"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME -->
+    <section id="game" class="section">
+      <div class="wrap">
+        <div class="section__head">
+          <span class="eyebrow">Game</span>
+          <h2 class="h2">Tebak Pesan.</h2>
+          <p class="muted">Gantian di laptop ini. Pecahkan sandinya secepat mungkin, petunjuk boleh dibeli pakai poin.</p>
+        </div>
+
+        <div class="card game">
+          <!-- START -->
+          <div class="game__screen" id="gStart">
+            <div class="gstart">
+              <label class="field">
+                <span class="field__label">Nama pemain</span>
+                <input id="gName" class="input input--big" type="text" maxlength="20" autocomplete="off" placeholder="Siapa yang main?">
+              </label>
+              <fieldset class="levels">
+                <legend class="field__label">Pilih level</legend>
+                <label class="level level--teal"><input type="radio" name="level" value="mudah" checked><span class="level__name">Mudah</span><span class="level__pts">500 poin</span><span class="level__desc">Kotak standar terbuka. Latihan membaca koordinat.</span></label>
+                <label class="level level--mustard"><input type="radio" name="level" value="sedang"><span class="level__name">Sedang</span><span class="level__pts">1000 poin</span><span class="level__desc">Pakai kata kunci, panjangnya dikasih tahu.</span></label>
+                <label class="level level--brick"><input type="radio" name="level" value="sulit"><span class="level__name">Sulit</span><span class="level__pts">1500 poin</span><span class="level__desc">Kata kunci misterius. Tanpa info.</span></label>
+              </fieldset>
+              <div class="gstart__actions">
+                <button id="gGo" class="btn btn--brick btn--lg" type="button" disabled>Mulai!</button>
+                <button id="gHostOpen" class="linkbtn" type="button">Panel Host</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PLAY -->
+          <div class="game__screen" id="gPlay" hidden>
+            <div class="gplay__bar">
+              <span class="chip" id="gWho"></span>
+              <span class="chip chip--level" id="gLvl"></span>
+              <span class="chip chip--time" aria-label="waktu"><span id="gTime">00:00</span></span>
+              <span class="chip chip--score">skor <b id="gScore">0</b></span>
+            </div>
+            <div class="gplay">
+              <div class="gplay__main">
+                <p class="field__label">Pesan rahasia</p>
+                <div id="gCipher" class="cipher"></div>
+                <p id="gKeyInfo" class="keyinfo"></p>
+                <form id="gForm" class="guess" autocomplete="off">
+                  <label class="sr" for="gGuess">Tebakanmu</label>
+                  <input id="gGuess" class="input input--big" type="text" placeholder="Ketik tebakanmu..." spellcheck="false">
+                  <button class="btn btn--teal" type="submit">Cek</button>
+                </form>
+                <p id="gFeedback" class="feedback" aria-live="polite"></p>
+                <div class="hints">
+                  <button class="hint" id="hKey" type="button"><span>Buka 1 huruf kunci</span><b>−100</b></button>
+                  <button class="hint" id="hRow" type="button"><span>Buka 1 baris kotak</span><b>−150</b></button>
+                  <button class="hint" id="hFirst" type="button"><span>Huruf pertama tiap kata</span><b>−200</b></button>
+                </div>
+                <button id="gGiveUp" class="linkbtn linkbtn--danger" type="button">Menyerah</button>
+              </div>
+              <div class="gplay__grid">
+                <div id="gGrid" class="pgrid-host"></div>
+                <p class="small muted center" id="gGridNote"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- RESULT -->
+          <div class="game__screen" id="gResult" hidden>
+            <div class="gresult">
+              <span class="sticker" id="rBadge">Terpecahkan!</span>
+              <p class="gresult__score"><span id="rScore">0</span><small>poin</small></p>
+              <p class="gresult__answer">Jawaban: <b class="mono" id="rAnswer"></b></p>
+              <ul class="breakdown" id="rBreak"></ul>
+              <p class="gresult__rank" id="rRank"></p>
+              <div class="gresult__actions">
+                <button id="rNext" class="btn btn--brick" type="button">Pemain berikutnya</button>
+                <button id="rAgain" class="btn btn--paper" type="button">Main lagi</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <dialog id="hostDlg" class="dialog">
+        <form method="dialog" class="dialog__x"><button class="iconbtn" aria-label="Tutup">✕</button></form>
+        <h3 class="h3">Panel Host</h3>
+        <p class="muted small">Tambah soal sendiri. Disimpan di laptop ini.</p>
+        <form id="hostForm" class="hostform">
+          <label class="field"><span class="field__label">Pesan asli</span><input id="hPlain" class="input" required maxlength="60" placeholder="mis. SUBNET MASK"></label>
+          <label class="field"><span class="field__label">Kata kunci</span><input id="hKeyIn" class="input input--mono" maxlength="30" placeholder="kosong = kotak standar"></label>
+          <label class="field"><span class="field__label">Level</span>
+            <select id="hLevel" class="input"><option value="mudah">Mudah</option><option value="sedang" selected>Sedang</option><option value="sulit">Sulit</option></select>
+          </label>
+          <p id="hostErr" class="error" role="alert" hidden></p>
+          <button class="btn btn--teal btn--sm" type="submit">Tambah soal</button>
+        </form>
+        <h4 class="h4">Soal buatan kamu</h4>
+        <ul id="hostList" class="hostlist"></ul>
+      </dialog>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section id="leaderboard" class="section section--ink">
+      <div class="wrap">
+        <div class="section__head">
+          <span class="eyebrow eyebrow--light">Papan skor</span>
+          <h2 class="h2">Pemecah sandi terbaik.</h2>
+        </div>
+        <div id="lbPodium" class="podium"></div>
+        <ol id="lbList" class="lblist" start="4"></ol>
+        <div id="lbEmpty" class="lbempty" hidden>
+          <div id="lbEmptyGrid" class="pgrid-host"></div>
+          <p>Belum ada yang memecahkan sandi. Jadilah yang pertama!</p>
+          <a class="btn btn--mustard btn--sm" href="#game">Main sekarang</a>
+        </div>
+        <div class="lbfoot"><button id="lbReset" class="linkbtn linkbtn--light" type="button">Reset papan skor</button></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <div>
+        <p class="brand__name">Kotak Rahasia</p>
+        <p class="small">Tugas Exercise TM12 Cryptography · Manajemen Jaringan · FTMM Universitas Airlangga · 2026</p>
+      </div>
+      <div class="small footer__team">
+        <p><b>Kelompok ?</b></p>
+        <p>Anggota: (menyusul)</p>
+      </div>
+    </div>
+  </footer>
+
+  <div id="confetti" class="confetti" aria-hidden="true"></div>
+
+  <script src="js/polybius.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/game-core.js" defer></script>
+  <script src="js/grid-view.js" defer></script>
+  <script src="js/hero.js" defer></script>
+  <script src="js/lab.js" defer></script>
+  <script src="js/game.js" defer></script>
+  <script src="js/leaderboard.js" defer></script>
+  <script src="js/main.js" defer></script>
+</body>
+</html>
