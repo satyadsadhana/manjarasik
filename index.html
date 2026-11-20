@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#f6f7f9">
+  <meta name="theme-color" content="#EBDDB8">
   <title>Kota Aksara — Sebuah petualangan sandi</title>
   <link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/cinzel.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/pinyon-script.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
   <script src="engine.js" defer></script>
   <script src="app.js" defer></script>
@@ -14,14 +16,20 @@
   <a href="#main" class="skip">Langsung ke cerita</a>
   <header class="topbar">
     <a class="brand" href="#" id="brandHome"><img src="assets/emblem.svg" alt="" width="30" height="30"><span>Kota Aksara</span></a>
-    <span class="edition">PETUALANGAN SANDI</span>
+    <span class="edition">Petualangan sandi</span>
     <nav aria-label="Navigasi petualangan">
       <button class="nav-button" id="mapNav">Peta</button>
       <button class="nav-button" id="journalNav">Jurnal <span id="keyCount" class="count">0/4</span></button>
     </nav>
   </header>
   <main id="main" tabindex="-1"></main>
-  <footer><span>Cerita fiksi. Sandi nyata.</span><span>Jelajahi. Pahami. Pecahkan.</span></footer>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand"><img src="assets/emblem.svg" alt="" width="40" height="40"><div><b>Kota Aksara</b><span>Sebuah petualangan sandi</span></div></div>
+      <p class="footer-script" aria-hidden="true">Jelajahi, pahami, pecahkan</p>
+      <div class="footer-meta"><span>Cerita fiksi. Sandi nyata.</span><span>Caesar · Atbash · Polybius · Vigenère</span></div>
+    </div>
+  </footer>
   <dialog id="journal" aria-labelledby="journalTitle">
     <div class="dialog-head"><div><span class="eyebrow">CATATAN PENJELAJAH</span><h2 id="journalTitle">Jurnal perjalanan</h2></div><button class="close" aria-label="Tutup jurnal" id="closeJournal">×</button></div>
     <p class="secondary" id="journalIntro"></p><div id="journalKeys"></div>

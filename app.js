@@ -1,70 +1,350 @@
 /* Kota Aksara: local, offline storybook adventure. No account or server required. */
-(function(){
-  'use strict';
-  const E=StoryEngine, quests=E.quests, STORE='kota-aksara-journey-v1';
-  const main=document.getElementById('main');
-  let state=E.validateState(null), hasSave=false, storageWorks=true, currentView='cover', currentQuest=null, hintIndex=-1;
-  try{const raw=localStorage.getItem(STORE);if(raw){state=E.validateState(JSON.parse(raw));hasSave=true;}}catch{storageWorks=false;}
-  const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const player=()=>esc(state.name||'Nara');
-  const iconPaths={arrow:'M4 12h16m-6-6 6 6-6 6',back:'M20 12H4m6-6-6 6 6 6',check:'m5 12 4 4 10-10',key:'M14 10a5 5 0 1 0-4 4l-7 7m2-2 3 3m0-6 3 3',lock:'M6 10h12v11H6zM8 10V7a4 4 0 0 1 8 0v3m-4 4v3',sun:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5',star:'m12 2 3 6 7 1-5 5 1 8-6-4-6 4 1-8-5-5 7-1Z',leaf:'M20 3C7 2 2 10 6 16s13 5 14-13ZM4 21 16 9m-7 6v-5m0 5h5',door:'M5 21V3h14v18M2 21h20M9 21V7l6-2v16m-3-7v1',book:'M12 5C8 2 4 3 2 4v16c4-2 7-1 10 1 3-2 6-3 10-1V4c-4-2-7-1-10 1Zm0 0v16',compass:'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4 6-3 5-5 3 3-5Z'};
-  const icon=n=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${iconPaths[n]||iconPaths.key}"/></svg>`;
-  const bind=(id,event,fn)=>{const el=document.getElementById(id);if(el)el.addEventListener(event,fn);};
-  function save(){hasSave=true;try{localStorage.setItem(STORE,JSON.stringify(state));}catch{storageWorks=false;}updateChrome();}
-  function updateChrome(){document.getElementById('keyCount').textContent=`${state.solved.length}/4`;document.getElementById('mapNav').disabled=!state.introDone;}
-  function show(html,view){currentView=view;main.innerHTML=(storageWorks?'':'<div class="storage-warning" role="status">Penyimpanan browser tidak tersedia. Kamu tetap bisa bermain, tetapi progres tidak akan tersimpan setelah halaman ditutup.</div>')+`<div class="screen">${html}</div>`;main.focus({preventScroll:true});window.scrollTo(0,0);updateChrome();}
-  function art(scene,caption='',label=''){return `<div class="scene ${scene}" role="img" aria-label="${esc(label||'Ilustrasi dunia Kota Aksara')}"><span class="coordinate" aria-hidden="true">AKSARA / CATATAN PERJALANAN</span>${caption?`<div class="art-caption"><span class="eyebrow">DARI JURNAL ELARA</span><p>${caption}</p></div>`:''}</div>`;}
-  function cover(){
-    const resume=hasSave?`<div class="resume-card"><p>Selamat kembali, <b>${player()}</b>. ${state.finished?'Kota Aksara telah kembali bercahaya.':`${state.solved.length} dari 4 kunci sudah kamu temukan.`}</p><div class="actions"><button class="button" id="resume">${state.finished?'Baca akhir cerita':'Lanjutkan perjalanan'} ${icon('arrow')}</button><button class="text-button" id="resetFromCover">Mulai ulang</button></div></div>`:`<form id="welcomeForm" class="welcome-form"><label for="playerName">Nama penjelajah</label><input id="playerName" class="input" autocomplete="nickname" maxlength="24" placeholder="Nara" value="Nara"><div class="actions"><button class="button" type="submit">Buka cerita ${icon('arrow')}</button></div></form>`;
-    show(`<section class="cover"><div class="cover-copy"><span class="chapter-label">SEBUAH BUKU CERITA INTERAKTIF</span><h1>Satu kota.<br>Empat kunci.<br><em>Giliranmu.</em></h1><p class="secondary">Kabut mulai menelan Kota Aksara. Sebuah lentera yang hilang adalah satu-satunya harapan. Dan kamu, penjelajah yang dipilih untuk menemukannya.</p>${resume}<div class="cover-features"><span><b>4 lokasi</b>untuk dijelajahi</span><span><b>4 sandi</b>untuk dipahami</span><span><b>1 perjalanan</b>milikmu sendiri</span></div></div>${art('city','“Ada hal-hal yang hanya bisa ditemukan<br>oleh mereka yang berani membaca.”','Kota fantasi Aksara dan seorang penjelajah bersyal biru di jalan menuju menara')}</section><p class="saved">${storageWorks?'Tanpa akun. Progres tersimpan di browser ini.':'Kamu bisa bermain tanpa akun.'}</p>`,'cover');
-    bind('welcomeForm','submit',event=>{event.preventDefault();const name=document.getElementById('playerName').value.trim().slice(0,24);state=E.validateState({name:name||'Nara'});save();story(0);});
-    bind('resume','click',()=>state.finished?ending():state.introDone?map():story(state.storyPage));
-    bind('resetFromCover','click',askReset);
+(function () {
+  "use strict";
+  const E = StoryEngine,
+    quests = E.quests,
+    STORE = "kota-aksara-journey-v1";
+  const main = document.getElementById("main");
+  let state = E.validateState(null),
+    hasSave = false,
+    storageWorks = true,
+    currentView = "cover",
+    currentQuest = null,
+    hintIndex = -1;
+  try {
+    const raw = localStorage.getItem(STORE);
+    if (raw) {
+      state = E.validateState(JSON.parse(raw));
+      hasSave = true;
+    }
+  } catch {
+    storageWorks = false;
   }
-  function introPages(){return [
-    {label:'PROLOG / SEBELUM KOTA TERLELAP',scene:'city',speaker:state.name||'Nara',role:'Penjelajah muda · penjaga pesan',title:`Ini kisahmu, ${player()}.`,body:`<p>Di Kota Aksara, setiap pesan punya tempatnya. Surat-surat disimpan di menara. Nama-nama bintang dicatat di kubah. Dan cerita tumbuh bersama akar pepohonan.</p><p>Kamu adalah <b>${player()}</b>, seorang pembawa pesan muda yang hafal setiap gang kecil di kota. Biasanya, tugasmu sederhana: memastikan setiap surat sampai ke rumah yang tepat.</p><p>Malam ini, sebuah surat datang justru untukmu.</p>`,caption:'Sebelum menjadi penyelamat,<br>kamu hanyalah pembawa pesan.'},
-    {label:'PROLOG / SURAT DARI ELARA',scene:'archive',speaker:'Elara',role:'Penjaga Arsip Kota',title:'“Kota ini membutuhkanmu.”',body:`<p>Surat itu bersegel emas. Tulisan Elara, penjaga arsip yang mengajarimu membaca sandi, tampak lebih tergesa daripada biasanya.</p><p class="quote">“${player()}, Kabut Sunyi telah melewati gerbang. Ia tidak menghancurkan bangunan. Ia mengambil ingatan. Jika kita menunggu, besok tak seorang pun akan ingat nama kotanya sendiri.”</p><p>Di balik jendela, cahaya rumah-rumah mulai padam satu per satu.</p>`,caption:'Ketika nama-nama mulai terlupakan,<br>sebuah pesan menjadi harapan.'},
-    {label:'PROLOG / EMPAT PENJAGA',scene:'sky',speaker:'Elara',role:'Pesan yang ditinggalkan untukmu',title:'Empat kunci. Empat bahasa.',body:`<p class="quote">“Temukan <b>Lentera Aksara</b>. Cahayanya dapat mengusir kabut. Aku menyembunyikannya di Ruang Fajar, lalu mengunci pintunya dengan empat kunci penjaga.”</p><p>Kunci-kunci itu tersebar di <b>Menara Angin, Observatorium, Taman Akar, dan Arsip Senja</b>. Setiap penjaga berbicara dengan sandi yang berbeda.</p><p>Tak perlu tahu semua jawabannya sekarang. Pelajari petunjuk di setiap lokasi. Jurnalmu akan menyimpan kunci yang berhasil ditemukan.</p>`,caption:'Setiap tempat menyimpan sandi.<br>Setiap sandi membuka jalan.'},
-    {label:'PROLOG / LANGKAH PERTAMA',scene:'garden',speaker:state.name||'Nara',role:'Penjelajah · sebuah perjalanan baru',title:'Kamu membuka halaman berikutnya.',body:`<p>Kamu meraih tas, menyelipkan surat Elara ke dalam jurnal, lalu melangkah keluar. Kabut menyentuh ujung sepatumu, dingin dan tanpa suara.</p><p>Empat tempat menunggumu. Kamu boleh memilih dari mana perjalanan dimulai. <b>Kumpulkan seluruh kunci untuk membuka Ruang Fajar.</b></p><p>Di halaman kosong jurnal, kamu menulis satu janji:</p><p class="quote">“Aku akan membawa cahaya itu pulang.”</p>`,caption:'Tidak semua penjelajah tahu arah.<br>Yang penting, mereka mulai melangkah.'}
-  ];}
-  function story(page){
-    state.storyPage=page;save();const s=introPages()[page];
-    show(`<div class="reading-bar"><span class="eyebrow">${s.label}</span><div class="page-dots" aria-label="Halaman ${page+1} dari 4">${[0,1,2,3].map(i=>`<i class="${i===page?'active':''}"></i>`).join('')}</div></div><article class="book">${art(s.scene,s.caption)}<div class="book-copy"><div class="character"><span class="avatar" aria-hidden="true">${esc(s.speaker.slice(0,1))}</span><div><b>${esc(s.speaker)}</b><small>${s.role}</small></div></div><h1>${s.title}</h1><div class="story-text">${s.body}</div><div class="book-controls"><button class="button ghost" id="prevStory">${icon('back')} ${page?'Sebelumnya':'Sampul'}</button><small>${page+1} / 4</small><button class="button" id="nextStory">${page===3?'Buka peta':'Lanjut cerita'} ${icon('arrow')}</button></div></div></article>`,'story');
-    bind('prevStory','click',()=>page?story(page-1):cover());bind('nextStory','click',()=>{if(page<3)story(page+1);else{state.introDone=true;save();map();}});
+  const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const player = () => esc(state.name || "Nara");
+  const iconPaths = {
+    arrow: "M4 12h16m-6-6 6 6-6 6",
+    back: "M20 12H4m6-6-6 6 6 6",
+    check: "m5 12 4 4 10-10",
+    key: "M14 10a5 5 0 1 0-4 4l-7 7m2-2 3 3m0-6 3 3",
+    lock: "M6 10h12v11H6zM8 10V7a4 4 0 0 1 8 0v3m-4 4v3",
+    sun: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5",
+    star: "m12 2 3 6 7 1-5 5 1 8-6-4-6 4 1-8-5-5 7-1Z",
+    leaf: "M20 3C7 2 2 10 6 16s13 5 14-13ZM4 21 16 9m-7 6v-5m0 5h5",
+    door: "M5 21V3h14v18M2 21h20M9 21V7l6-2v16m-3-7v1",
+    book: "M12 5C8 2 4 3 2 4v16c4-2 7-1 10 1 3-2 6-3 10-1V4c-4-2-7-1-10 1Zm0 0v16",
+    compass: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4 6-3 5-5 3 3-5Z",
+  };
+  const decoPaths = {
+    compass:
+      '<circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="50" cy="50" r="36" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4"/><path d="M50 10 58 50 50 90 42 50Z" fill="currentColor" opacity=".9"/><path d="M10 50 50 42 90 50 50 58Z" fill="currentColor" opacity=".45"/><circle cx="50" cy="50" r="4" fill="var(--paper)"/>',
+    scroll:
+      '<path d="M22 22h50a8 8 0 0 1 8 8v44a8 8 0 0 1-8 8H30a8 8 0 0 1-8-8V22Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M22 22a8 8 0 0 0-8 8v6h8M80 74v6a8 8 0 0 1-8 8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M34 38h34M34 48h34M34 58h22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 5"/>',
+    quill:
+      '<path d="M84 12C52 18 30 40 22 78l6 2c6-14 14-24 24-32-6 10-10 20-12 30 22-10 38-34 44-66Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 90 28 76" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    path: '<path d="M4 80C40 20 80 90 120 40s70-10 92 20" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 8" stroke-linecap="round"/>',
+  };
+  const deco = (n, cls = "") =>
+    `<svg class="deco deco-${n} ${cls}" viewBox="${n === "path" ? "0 0 216 100" : "0 0 100 100"}" aria-hidden="true" focusable="false">${decoPaths[n]}</svg>`;
+  const icon = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${iconPaths[n] || iconPaths.key}"/></svg>`;
+  const bind = (id, event, fn) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(event, fn);
+  };
+  function save() {
+    hasSave = true;
+    try {
+      localStorage.setItem(STORE, JSON.stringify(state));
+    } catch {
+      storageWorks = false;
+    }
+    updateChrome();
   }
-  function map(){
-    if(!state.introDone){cover();return;}const n=state.solved.length,ready=E.canUnlock(state.solved);
-    show(`<section><div class="map-head"><div><span class="eyebrow">BAB I / JEJAK EMPAT PENJAGA</span><h1>Ke mana langkahmu, ${player()}?</h1><p>Setiap lokasi menyimpan satu kunci. Pilih tempat yang ingin kamu jelajahi; jurnal akan mencatat perjalananmu.</p></div><div class="progress-box"><span>${n} dari 4 kunci ditemukan</span><div class="progress-track" role="progressbar" aria-label="Kunci ditemukan" aria-valuemin="0" aria-valuemax="4" aria-valuenow="${n}"><i style="width:${n*25}%"></i></div></div></div><div class="map-grid">${quests.map(q=>{const done=state.solved.includes(q.id);return `<article class="location"><div class="scene ${q.scene}" role="img" aria-label="Ilustrasi ${q.name}"><span class="location-number">LOKASI ${q.number}</span>${done?`<span class="complete-mark" aria-label="Kunci sudah ditemukan">${icon('check')}</span>`:''}</div><div class="location-content"><span class="pill ${q.color}">${q.cipher}</span><h2>${q.name}</h2><p>${q.subtitle}</p><button class="button ${done?'secondary-button':''}" data-visit="${q.id}">${done?'Lihat kunci':'Jelajahi'} ${icon(done?'key':'arrow')}</button></div></article>`;}).join('')}</div><article class="final-gate ${ready?'unlocked':''}"><div class="gate-icon">${icon(ready?'sun':'lock')}</div><div><span class="eyebrow" style="margin-bottom:8px">TUJUAN AKHIR</span><h2>Ruang Fajar</h2><p>${ready?'Keempat kunci menyala. Pintu menuju Lentera Aksara kini terbuka.':`Lentera menunggu di balik pintu ini. Temukan ${4-n} kunci lagi untuk membukanya.`}</p></div><button class="button" id="openFinal" ${ready?'':'disabled'}>${state.finished?'Baca epilog':ready?'Masuk ke Ruang Fajar':'Terkunci · '+n+'/4'} ${icon(ready?'arrow':'lock')}</button></article><div class="map-note"><p>${iconInlineBook()} Petunjuk tersedia di setiap lokasi. Tidak ada batas waktu.</p><button class="text-button" id="reread">Baca ulang prolog</button></div></section>`,'map');
-    main.querySelectorAll('[data-visit]').forEach(b=>b.addEventListener('click',()=>visit(b.dataset.visit)));bind('openFinal','click',()=>{if(ready)state.finished?ending():finalStory();});bind('reread','click',()=>story(0));
+  function updateChrome() {
+    document.getElementById("keyCount").textContent = `${state.solved.length}/4`;
+    document.getElementById("mapNav").disabled = !state.introDone;
   }
-  function iconInlineBook(){return '<span aria-hidden="true">01—04</span> &nbsp;';}
-  function visit(id){const q=quests.find(q=>q.id===id);if(!q)return;currentQuest=q;hintIndex=-1;if(state.solved.includes(id)){reward(q);return;}
-    show(`<div class="reading-bar"><button class="button ghost" id="backMap">${icon('back')} Kembali ke peta</button><span class="pill ${q.color}">${q.cipher} · lokasi ${q.number}</span></div><article class="book">${art(q.scene,`“${q.clue}”`)}<div class="book-copy"><span class="eyebrow">LOKASI ${q.number} / ${q.subtitle}</span><h1>${q.name}</h1><div class="story-text"><p>${q.text}</p><p>Kamu membuka jurnal dan mengamati pesan itu. Kunci ${state.solved.length+1} dari 4 mungkin tinggal selangkah lagi.</p></div><div class="book-controls"><small>Baca. Pahami. Coba.</small><button class="button" id="beginPuzzle">Periksa sandi ${icon('arrow')}</button></div></div></article>`,'location');bind('backMap','click',map);bind('beginPuzzle','click',()=>puzzle(q));
+  function show(html, view) {
+    currentView = view;
+    main.innerHTML =
+      (storageWorks
+        ? ""
+        : '<div class="storage-warning" role="status">Penyimpanan browser tidak tersedia. Kamu tetap bisa bermain, tetapi progres tidak akan tersimpan setelah halaman ditutup.</div>') +
+      `<div class="screen">${html}</div>`;
+    main.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+    updateChrome();
   }
-  function guide(q){
-    if(q.id==='tower')return `<p>${q.lesson} Cocokkan huruf pada baris sandi dengan huruf tepat di atasnya. Alfabet berputar, sehingga A digeser −3 menjadi X.</p><div class="alphabet" aria-label="Baris asli A sampai Z dan baris sandi D sampai C">Asli  A B C D E F G H I J K L M<br>      N O P Q R S T U V W X Y Z<br>Sandi D E F G H I J K L M N O P<br>      Q R S T U V W X Y Z A B C</div>`;
-    if(q.id==='observatory')return `<p>${q.lesson} Cari huruf pesan pada salah satu baris, lalu baca huruf pasangannya.</p><div class="alphabet">A B C D E F G H I J K L M<br>Z Y X W V U T S R Q P O N</div>`;
-    if(q.id==='garden'){const g=E.grid('AKSARA');return `<p>${q.lesson} Contoh: baris 2, kolom 1 (21) menghasilkan C. Lihat nomor di atas dan di samping kotak.</p><div class="polygrid" aria-label="Kotak Polybius dengan kata kunci AKSARA"><span class="axis"></span>${[1,2,3,4,5].map(v=>`<span class="axis">${v}</span>`).join('')}${[0,1,2,3,4].map(row=>`<span class="axis">${row+1}</span>${g.slice(row*5,row*5+5).map((c,col)=>`<span class="${row*5+col<4?'key-letter':''}" aria-label="baris ${row+1} kolom ${col+1}: ${c}">${c}</span>`).join('')}`).join('')}</div>`;}
+  function art(scene, caption = "", label = "") {
+    return `<div class="scene ${scene}" role="img" aria-label="${esc(label || "Ilustrasi dunia Kota Aksara")}"><span class="coordinate" aria-hidden="true">AKSARA / CATATAN PERJALANAN</span>${caption ? `<div class="art-caption"><span class="eyebrow">DARI JURNAL ELARA</span><p>${caption}</p></div>` : ""}</div>`;
+  }
+  function cover() {
+    const resume = hasSave
+      ? `<div class="resume-card"><p><span class="script">Selamat kembali,</span> <b>${player()}</b>. ${state.finished ? "Kota Aksara telah kembali bercahaya." : `${state.solved.length} dari 4 kunci sudah kamu temukan.`}</p><div class="actions"><button class="button" id="resume">${state.finished ? "Baca akhir cerita" : "Lanjutkan perjalanan"} ${icon("arrow")}</button><button class="text-button" id="resetFromCover">Mulai ulang</button></div></div>`
+      : `<form id="welcomeForm" class="welcome-form"><div class="bar-field"><label for="playerName">Nama penjelajah</label><input id="playerName" class="input" autocomplete="nickname" maxlength="24" placeholder="Nara" value="Nara"></div><div class="bar-stat"><span>Lokasi</span><b>4 tempat</b></div><div class="bar-stat"><span>Sandi</span><b>4 bahasa</b></div><button class="button" type="submit">Buka cerita ${icon("arrow")}</button></form>`;
+    show(
+      `<section class="hero">${art("city", "", "Kota fantasi Aksara dan seorang penjelajah bersyal biru di jalan menuju menara")}<div class="hero-copy"><span class="script hero-script">Temukan</span><h1 class="hero-title">Kota Aksara</h1><p>Kabut mulai menelan Kota Aksara. Sebuah lentera yang hilang adalah satu-satunya harapan. Dan kamu, penjelajah yang dipilih untuk menemukannya.</p></div><div class="hero-badge" aria-hidden="true"><b>4</b><span>kunci</span></div>${deco("compass", "hero-compass")}</section><div class="quest-bar">${resume}</div><section class="steps-block" aria-labelledby="stepsTitle"><div class="section-head"><span class="script">Tiga langkah</span><h2 id="stepsTitle">Menyelamatkan kota</h2></div><ol class="step-cards"><li><span class="step-num">1</span><div><b>Baca prolog</b><p>Kenali Elara dan alasan kota ini membutuhkanmu.</p></div>${deco("scroll", "step-deco")}</li><li><span class="step-num">2</span><div><b>Pecahkan 4 sandi</b><p>Caesar, Atbash, Polybius, dan Vigenère menunggu di empat lokasi.</p></div>${deco("quill", "step-deco")}</li><li><span class="step-num">3</span><div><b>Nyalakan lentera</b><p>Kumpulkan semua kunci untuk membuka Ruang Fajar.</p></div>${deco("compass", "step-deco")}</li></ol></section><aside class="quote-band"><span class="eyebrow">Dari jurnal Elara</span><p>“Ada hal-hal yang hanya bisa ditemukan oleh mereka yang berani membaca.”</p></aside><p class="saved">${storageWorks ? "Tanpa akun. Progres tersimpan di browser ini." : "Kamu bisa bermain tanpa akun."}</p>`,
+      "cover",
+    );
+    bind("welcomeForm", "submit", (event) => {
+      event.preventDefault();
+      const name = document.getElementById("playerName").value.trim().slice(0, 24);
+      state = E.validateState({ name: name || "Nara" });
+      save();
+      story(0);
+    });
+    bind("resume", "click", () => (state.finished ? ending() : state.introDone ? map() : story(state.storyPage)));
+    bind("resetFromCover", "click", askReset);
+  }
+  function introPages() {
+    return [
+      {
+        label: "PROLOG / SEBELUM KOTA TERLELAP",
+        scene: "city",
+        speaker: state.name || "Nara",
+        role: "Penjelajah muda · penjaga pesan",
+        title: `Ini kisahmu, ${player()}.`,
+        body: `<p>Di Kota Aksara, setiap pesan punya tempatnya. Surat-surat disimpan di menara. Nama-nama bintang dicatat di kubah. Dan cerita tumbuh bersama akar pepohonan.</p><p>Kamu adalah <b>${player()}</b>, seorang pembawa pesan muda yang hafal setiap gang kecil di kota. Biasanya, tugasmu sederhana: memastikan setiap surat sampai ke rumah yang tepat.</p><p>Malam ini, sebuah surat datang justru untukmu.</p>`,
+        caption: "Sebelum menjadi penyelamat,<br>kamu hanyalah pembawa pesan.",
+      },
+      {
+        label: "PROLOG / SURAT DARI ELARA",
+        scene: "archive",
+        speaker: "Elara",
+        role: "Penjaga Arsip Kota",
+        title: "“Kota ini membutuhkanmu.”",
+        body: `<p>Surat itu bersegel emas. Tulisan Elara, penjaga arsip yang mengajarimu membaca sandi, tampak lebih tergesa daripada biasanya.</p><p class="quote">“${player()}, Kabut Sunyi telah melewati gerbang. Ia tidak menghancurkan bangunan. Ia mengambil ingatan. Jika kita menunggu, besok tak seorang pun akan ingat nama kotanya sendiri.”</p><p>Di balik jendela, cahaya rumah-rumah mulai padam satu per satu.</p>`,
+        caption: "Ketika nama-nama mulai terlupakan,<br>sebuah pesan menjadi harapan.",
+      },
+      {
+        label: "PROLOG / EMPAT PENJAGA",
+        scene: "sky",
+        speaker: "Elara",
+        role: "Pesan yang ditinggalkan untukmu",
+        title: "Empat kunci. Empat bahasa.",
+        body: `<p class="quote">“Temukan <b>Lentera Aksara</b>. Cahayanya dapat mengusir kabut. Aku menyembunyikannya di Ruang Fajar, lalu mengunci pintunya dengan empat kunci penjaga.”</p><p>Kunci-kunci itu tersebar di <b>Menara Angin, Observatorium, Taman Akar, dan Arsip Senja</b>. Setiap penjaga berbicara dengan sandi yang berbeda.</p><p>Tak perlu tahu semua jawabannya sekarang. Pelajari petunjuk di setiap lokasi. Jurnalmu akan menyimpan kunci yang berhasil ditemukan.</p>`,
+        caption: "Setiap tempat menyimpan sandi.<br>Setiap sandi membuka jalan.",
+      },
+      {
+        label: "PROLOG / LANGKAH PERTAMA",
+        scene: "garden",
+        speaker: state.name || "Nara",
+        role: "Penjelajah · sebuah perjalanan baru",
+        title: "Kamu membuka halaman berikutnya.",
+        body: `<p>Kamu meraih tas, menyelipkan surat Elara ke dalam jurnal, lalu melangkah keluar. Kabut menyentuh ujung sepatumu, dingin dan tanpa suara.</p><p>Empat tempat menunggumu. Kamu boleh memilih dari mana perjalanan dimulai. <b>Kumpulkan seluruh kunci untuk membuka Ruang Fajar.</b></p><p>Di halaman kosong jurnal, kamu menulis satu janji:</p><p class="quote">“Aku akan membawa cahaya itu pulang.”</p>`,
+        caption: "Tidak semua penjelajah tahu arah.<br>Yang penting, mereka mulai melangkah.",
+      },
+    ];
+  }
+  function story(page) {
+    state.storyPage = page;
+    save();
+    const s = introPages()[page];
+    show(
+      `<div class="reading-bar"><span class="eyebrow">${s.label}</span><div class="page-dots" aria-label="Halaman ${page + 1} dari 4">${[0, 1, 2, 3].map((i) => `<i class="${i === page ? "active" : i < page ? "done" : ""}">${i + 1}</i>`).join("")}</div></div><article class="book"><div class="book-art">${art(s.scene, s.caption)}<span class="page-badge" aria-hidden="true"><b>0${page + 1}</b><span>halaman</span></span></div><div class="book-copy"><div class="character"><span class="avatar" aria-hidden="true">${esc(s.speaker.slice(0, 1))}</span><div><b>${esc(s.speaker)}</b><small>${s.role}</small></div></div><h1>${s.title}</h1><div class="story-text">${s.body}</div><div class="book-controls"><button class="button ghost" id="prevStory">${icon("back")} ${page ? "Sebelumnya" : "Sampul"}</button><small>${page + 1} / 4</small><button class="button" id="nextStory">${page === 3 ? "Buka peta" : "Lanjut cerita"} ${icon("arrow")}</button></div></div></article>`,
+      "story",
+    );
+    bind("prevStory", "click", () => (page ? story(page - 1) : cover()));
+    bind("nextStory", "click", () => {
+      if (page < 3) story(page + 1);
+      else {
+        state.introDone = true;
+        save();
+        map();
+      }
+    });
+  }
+  function map() {
+    if (!state.introDone) {
+      cover();
+      return;
+    }
+    const n = state.solved.length,
+      ready = E.canUnlock(state.solved);
+    show(
+      `<section><div class="map-head"><div><span class="eyebrow">Bab I</span><span class="script">Jejak empat penjaga</span><h1>Ke mana langkahmu, ${player()}?</h1><p>Setiap lokasi menyimpan satu kunci. Pilih tempat yang ingin kamu jelajahi; jurnal akan mencatat perjalananmu.</p></div><div class="progress-box"><span>${n} dari 4 kunci ditemukan</span><div class="progress-track" role="progressbar" aria-label="Kunci ditemukan" aria-valuemin="0" aria-valuemax="4" aria-valuenow="${n}"><i style="width:${n * 25}%"></i></div></div></div>${deco("path", "map-path")}<div class="map-grid">${quests
+        .map((q) => {
+          const done = state.solved.includes(q.id);
+          return `<article class="location"><div class="scene ${q.scene}" role="img" aria-label="Ilustrasi ${q.name}">${done ? `<span class="complete-mark" aria-label="Kunci sudah ditemukan">${icon("check")}</span>` : ""}</div><div class="location-content"><span class="location-number" aria-label="Lokasi ${q.number}">${q.number}</span><span class="pill ${q.color}">${icon(q.symbol)} ${q.cipher}</span><h2>${q.name}</h2><p>${q.subtitle}</p><button class="button ${done ? "secondary-button" : ""}" data-visit="${q.id}">${done ? "Lihat kunci" : "Jelajahi"} ${icon(done ? "key" : "arrow")}</button></div></article>`;
+        })
+        .join(
+          "",
+        )}</div><article class="final-gate ${ready ? "unlocked" : ""}"><div class="gate-count" aria-hidden="true"><b>${n}</b><span class="script">dari 4 kunci</span></div><div class="gate-text"><span class="eyebrow">Tujuan akhir</span><h2>Ruang Fajar</h2><p>${ready ? "Keempat kunci menyala. Pintu menuju Lentera Aksara kini terbuka." : `Lentera menunggu di balik pintu ini. Temukan ${4 - n} kunci lagi untuk membukanya.`}</p></div><button class="button" id="openFinal" ${ready ? "" : "disabled"}>${state.finished ? "Baca epilog" : ready ? "Masuk ke Ruang Fajar" : "Terkunci · " + n + "/4"} ${icon(ready ? "arrow" : "lock")}</button></article><div class="map-note"><p>${iconInlineBook()} Petunjuk tersedia di setiap lokasi. Tidak ada batas waktu.</p><button class="text-button" id="reread">Baca ulang prolog</button></div></section>`,
+      "map",
+    );
+    main.querySelectorAll("[data-visit]").forEach((b) => b.addEventListener("click", () => visit(b.dataset.visit)));
+    bind("openFinal", "click", () => {
+      if (ready) state.finished ? ending() : finalStory();
+    });
+    bind("reread", "click", () => story(0));
+  }
+  function iconInlineBook() {
+    return '<span aria-hidden="true">01—04</span> &nbsp;';
+  }
+  function visit(id) {
+    const q = quests.find((q) => q.id === id);
+    if (!q) return;
+    currentQuest = q;
+    hintIndex = -1;
+    if (state.solved.includes(id)) {
+      reward(q);
+      return;
+    }
+    show(
+      `<div class="reading-bar"><button class="button ghost" id="backMap">${icon("back")} Kembali ke peta</button><span class="pill ${q.color}">${q.cipher} · lokasi ${q.number}</span></div><article class="book"><div class="book-art">${art(q.scene, `“${q.clue}”`)}<span class="page-badge" aria-hidden="true"><b>${q.number}</b><span>lokasi</span></span></div><div class="book-copy"><span class="eyebrow">Lokasi ${q.number}</span><span class="script">${q.subtitle}</span><h1>${q.name}</h1><div class="story-text"><p>${q.text}</p><p>Kamu membuka jurnal dan mengamati pesan itu. Kunci ${state.solved.length + 1} dari 4 mungkin tinggal selangkah lagi.</p></div><div class="book-controls"><small>Baca. Pahami. Coba.</small><button class="button" id="beginPuzzle">Periksa sandi ${icon("arrow")}</button></div></div></article>`,
+      "location",
+    );
+    bind("backMap", "click", map);
+    bind("beginPuzzle", "click", () => puzzle(q));
+  }
+  function guide(q) {
+    if (q.id === "tower")
+      return `<p>${q.lesson} Cocokkan huruf pada baris sandi dengan huruf tepat di atasnya. Alfabet berputar, sehingga A digeser −3 menjadi X.</p><div class="alphabet" aria-label="Baris asli A sampai Z dan baris sandi D sampai C">Asli  A B C D E F G H I J K L M<br>      N O P Q R S T U V W X Y Z<br>Sandi D E F G H I J K L M N O P<br>      Q R S T U V W X Y Z A B C</div>`;
+    if (q.id === "observatory")
+      return `<p>${q.lesson} Cari huruf pesan pada salah satu baris, lalu baca huruf pasangannya.</p><div class="alphabet">A B C D E F G H I J K L M<br>Z Y X W V U T S R Q P O N</div>`;
+    if (q.id === "garden") {
+      const g = E.grid("AKSARA");
+      return `<p>${q.lesson} Contoh: baris 2, kolom 1 (21) menghasilkan C. Lihat nomor di atas dan di samping kotak.</p><div class="polygrid" aria-label="Kotak Polybius dengan kata kunci AKSARA"><span class="axis"></span>${[1, 2, 3, 4, 5].map((v) => `<span class="axis">${v}</span>`).join("")}${[
+        4,
+      ]
+        .map(
+          (row) =>
+            `<span class="axis">${row + 1}</span>${g
+              .slice(row * 5, row * 5 + 5)
+              .map(
+                (c, col) =>
+                  `<span class="${row * 5 + col < 4 ? "key-letter" : ""}" aria-label="baris ${row + 1} kolom ${col + 1}: ${c}">${c}</span>`,
+              )
+              .join("")}`,
+        )
+        .join("")}</div>`;
+    }
     return `<p>${q.lesson} Gunakan kata kunci <b>KOTA</b>. Karena pesan berisi enam huruf, ulangi kuncinya menjadi <b>KOTAKO</b>. Jika hasil pengurangan negatif, tambahkan 26.</p><table class="vtable"><caption>Dua huruf pertama sebagai contoh</caption><tr><th>Huruf sandi</th><td>Z (25)</td><td>I (8)</td></tr><tr><th>Huruf kunci</th><td>K (10)</td><td>O (14)</td></tr><tr><th>Hasil asli</th><td>P (15)</td><td>U (20)</td></tr></table><div class="alphabet">A=0  B=1  C=2  D=3  E=4  F=5  G=6<br>H=7  I=8  J=9  K=10 L=11 M=12 N=13<br>O=14 P=15 Q=16 R=17 S=18 T=19 U=20<br>V=21 W=22 X=23 Y=24 Z=25</div>`;
   }
-  function elaraNote(q){const m=q.text.match(/“([^”]+)”\s*$/);return m?m[1]:q.text;}
-  function puzzle(q){
-    show(`<div class="puzzle-header"><button class="button ghost" id="backLocation">${icon('back')} Cerita lokasi</button><span class="pill ${q.color}">${icon(q.symbol)} ${q.name}</span></div><div class="puzzle-layout"><aside class="puzzle-side">${art(q.scene)}<div class="puzzle-lore"><span class="eyebrow">Lokasi ${q.number} · ${esc(q.name)}</span><h2>Pesan Elara</h2><blockquote><p>${elaraNote(q)}</p></blockquote></div></aside><section class="puzzle-work" aria-labelledby="puzzleTitle"><span class="pill ${q.color}">Sandi ${q.cipher}</span><h1 id="puzzleTitle">Apa pesan di balik sandi?</h1><p class="secondary">Buka catatan cara membaca jika ini pertama kalinya kamu menjumpai sandi ${q.cipher}.</p><div class="cipher-box"><div class="cipher-label">PESAN YANG DITEMUKAN</div><div class="cipher-code" aria-label="Pesan sandi ${q.ciphertext}">${q.ciphertext}</div><p class="cipher-clue">“${q.clue}”</p></div><form id="answerForm" class="answer-form"><label for="answer">Pesan yang kamu temukan</label><div class="answer-row"><input class="input" id="answer" autocomplete="off" spellcheck="false" maxlength="50" aria-describedby="answerHelp answerFeedback" placeholder="Tulis jawabannya"><button class="button" type="submit">Buka kunci ${icon('key')}</button></div><p class="helper-text" id="answerHelp">Satu kata, ${q.answer.length} huruf. Huruf besar dan kecil dianggap sama.</p><p class="feedback" id="answerFeedback" role="alert"></p></form><div class="hint-row"><button class="text-button" id="hintButton">Butuh petunjuk?</button><span id="hintCount">0 dari 3 petunjuk</span></div><div id="hintBox" class="hint-box" role="status" hidden></div><details class="guide"><summary>Cara membaca sandi ${q.cipher}</summary>${guide(q)}</details></section></div>`,'puzzle');
-    bind('backLocation','click',()=>visit(q.id));bind('answerForm','submit',event=>{event.preventDefault();const input=document.getElementById('answer'),value=E.normalize(input.value);if(!value){document.getElementById('answerFeedback').textContent='Tulis satu kata terlebih dahulu.';input.setAttribute('aria-invalid','true');input.focus();return;}if(value===q.answer){if(!state.solved.includes(q.id))state.solved.push(q.id);save();document.getElementById('announcement').textContent=`${q.key} ditemukan. ${state.solved.length} dari 4 kunci terkumpul.`;reward(q);}else{document.getElementById('answerFeedback').textContent='Belum tepat. Coba periksa lagi pasangan atau pergeseran hurufnya. Kamu juga bisa membuka petunjuk.';input.setAttribute('aria-invalid','true');input.focus();}});
-    bind('answer','input',()=>{document.getElementById('answer').removeAttribute('aria-invalid');document.getElementById('answerFeedback').textContent='';});
-    bind('hintButton','click',()=>{hintIndex=Math.min(2,hintIndex+1);const box=document.getElementById('hintBox');box.hidden=false;box.textContent=q.hints[hintIndex];document.getElementById('hintCount').textContent=`${hintIndex+1} dari 3 petunjuk`;const button=document.getElementById('hintButton');button.textContent=hintIndex===2?'Semua petunjuk terbuka':'Petunjuk berikutnya';button.disabled=hintIndex===2;});
+  function elaraNote(q) {
+    const m = q.text.match(/“([^”]+)”\s*$/);
+    return m ? m[1] : q.text;
   }
-  function reward(q){const n=state.solved.length;
-    show(`<article class="reward-shell">${art(q.scene)}<div class="reward-copy"><div class="key-medallion">${icon(q.symbol)}</div><span class="eyebrow">KUNCI PENJAGA DITEMUKAN</span><h1>${q.key}</h1><div class="story-text"><p>${q.reward}</p></div><span class="pill ${q.color}">${icon('check')} ${n} dari 4 kunci terkumpul</span><div class="lesson-box"><h2>Yang kamu pelajari · ${q.cipher}</h2><p>${q.lesson}</p></div><div class="actions"><button class="button" id="continueMap">${n===4?'Buka peta · Ruang Fajar terbuka':'Lanjutkan perjalanan'} ${icon('arrow')}</button><button class="text-button" id="reviewPuzzle">Baca catatan sandi</button></div></div></article>`,'reward');bind('continueMap','click',map);bind('reviewPuzzle','click',()=>{hintIndex=-1;puzzle(q);});
+  function puzzle(q) {
+    show(
+      `<div class="puzzle-header"><button class="button ghost" id="backLocation">${icon("back")} Cerita lokasi</button><span class="pill ${q.color}">${icon(q.symbol)} ${q.name}</span></div><div class="puzzle-layout"><aside class="puzzle-side"><div class="lore-art">${art(q.scene)}</div><div class="puzzle-lore"><span class="eyebrow">Lokasi ${q.number} · ${esc(q.name)}</span><h2>Pesan Elara</h2><blockquote><p>${elaraNote(q)}</p></blockquote></div></aside><section class="puzzle-work" aria-labelledby="puzzleTitle"><span class="pill ${q.color}">Sandi ${q.cipher}</span><h1 id="puzzleTitle">Apa pesan di balik sandi?</h1><p class="secondary">Buka catatan cara membaca jika ini pertama kalinya kamu menjumpai sandi ${q.cipher}.</p><div class="cipher-box"><div class="cipher-label">PESAN YANG DITEMUKAN</div><div class="cipher-code" aria-label="Pesan sandi ${q.ciphertext}">${q.ciphertext}</div><p class="cipher-clue">“${q.clue}”</p></div><form id="answerForm" class="answer-form"><label for="answer">Pesan yang kamu temukan</label><div class="answer-row"><input class="input" id="answer" autocomplete="off" spellcheck="false" maxlength="50" aria-describedby="answerHelp answerFeedback" placeholder="Tulis jawabannya"><button class="button" type="submit">Buka kunci ${icon("key")}</button></div><p class="helper-text" id="answerHelp">Satu kata, ${q.answer.length} huruf. Huruf besar dan kecil dianggap sama.</p><p class="feedback" id="answerFeedback" role="alert"></p></form><div class="hint-row"><button class="text-button" id="hintButton">Butuh petunjuk?</button><span id="hintCount">0 dari 3 petunjuk</span></div><div id="hintBox" class="hint-box" role="status" hidden></div><details class="guide"><summary>Cara membaca sandi ${q.cipher}</summary>${guide(q)}</details></section></div>`,
+      "puzzle",
+    );
+    bind("backLocation", "click", () => visit(q.id));
+    bind("answerForm", "submit", (event) => {
+      event.preventDefault();
+      const input = document.getElementById("answer"),
+        value = E.normalize(input.value);
+      if (!value) {
+        document.getElementById("answerFeedback").textContent = "Tulis satu kata terlebih dahulu.";
+        input.setAttribute("aria-invalid", "true");
+        input.focus();
+        return;
+      }
+      if (value === q.answer) {
+        if (!state.solved.includes(q.id)) state.solved.push(q.id);
+        save();
+        document.getElementById("announcement").textContent = `${q.key} ditemukan. ${state.solved.length} dari 4 kunci terkumpul.`;
+        reward(q);
+      } else {
+        document.getElementById("answerFeedback").textContent =
+          "Belum tepat. Coba periksa lagi pasangan atau pergeseran hurufnya. Kamu juga bisa membuka petunjuk.";
+        input.setAttribute("aria-invalid", "true");
+        input.focus();
+      }
+    });
+    bind("answer", "input", () => {
+      document.getElementById("answer").removeAttribute("aria-invalid");
+      document.getElementById("answerFeedback").textContent = "";
+    });
+    bind("hintButton", "click", () => {
+      hintIndex = Math.min(2, hintIndex + 1);
+      const box = document.getElementById("hintBox");
+      box.hidden = false;
+      box.textContent = q.hints[hintIndex];
+      document.getElementById("hintCount").textContent = `${hintIndex + 1} dari 3 petunjuk`;
+      const button = document.getElementById("hintButton");
+      button.textContent = hintIndex === 2 ? "Semua petunjuk terbuka" : "Petunjuk berikutnya";
+      button.disabled = hintIndex === 2;
+    });
   }
-  function finalStory(){if(!E.canUnlock(state.solved)){map();return;}
-    show(`<div class="reading-bar"><button class="button ghost" id="finalBack">${icon('back')} Peta perjalanan</button><span class="eyebrow">BAB II / RUANG FAJAR</span></div><article class="book">${art('sky','“Cahaya tidak pernah benar-benar hilang.<br>Ia hanya menunggu untuk ditemukan.”')}<div class="book-copy"><span class="eyebrow">EMPAT KUNCI / SATU PINTU</span><h1>Di sini, semua jalan bertemu.</h1><div class="story-text"><p>Kamu meletakkan Kunci Surya, Langit, Akar, dan Pulang pada pintu batu. Keempatnya berputar serentak. Pintu Ruang Fajar terbuka tanpa suara.</p><p>Di tengah ruangan berdiri <b>Lentera Aksara</b>, benda yang selama ini kamu cari. Cahayanya hampir padam, tetapi di dalamnya masih bergerak huruf-huruf kecil, seperti kunang-kunang.</p><p>Di alasnya terukir pesan terakhir Elara:</p><p class="quote">“Kota hidup selama seseorang masih mau menjaga ceritanya. Kini, giliranmu.”</p></div><div class="book-controls"><small>Lentera telah ditemukan.</small><button class="button" id="lightLantern">Nyalakan lentera ${icon('sun')}</button></div></div></article>`,'final');bind('finalBack','click',map);bind('lightLantern','click',()=>{if(E.canUnlock(state.solved)){state.finished=true;save();ending();}});
+  function reward(q) {
+    const n = state.solved.length;
+    show(
+      `<article class="reward-shell"><div class="reward-hero"><div class="ring-art">${art(q.scene)}</div><div class="ring-badge" aria-hidden="true"><b>${n}/4</b><span>kunci</span></div><div class="key-medallion">${icon(q.symbol)}</div></div><div class="reward-copy"><span class="script">Kunci penjaga ditemukan</span><h1>${q.key}</h1><div class="story-text"><p>${q.reward}</p></div><span class="pill ${q.color}">${icon("check")} ${n} dari 4 kunci terkumpul</span><div class="lesson-box"><h2>Yang kamu pelajari · ${q.cipher}</h2><p>${q.lesson}</p></div><div class="actions"><button class="button" id="continueMap">${n === 4 ? "Buka peta · Ruang Fajar terbuka" : "Lanjutkan perjalanan"} ${icon("arrow")}</button><button class="text-button" id="reviewPuzzle">Baca catatan sandi</button></div></div></article>`,
+      "reward",
+    );
+    bind("continueMap", "click", map);
+    bind("reviewPuzzle", "click", () => {
+      hintIndex = -1;
+      puzzle(q);
+    });
   }
-  function ending(){if(!state.finished){map();return;}
-    show(`<article class="reward-shell ending">${art('city','Kota Aksara mengingat namanya kembali.')}<div class="reward-copy"><div class="key-medallion">${icon('sun')}</div><span class="eyebrow">EPILOG / CAHAYA YANG PULANG</span><h1>Kamu membawa fajar,<br>${player()}.</h1><div class="story-text"><p>Cahaya Lentera Aksara mengalir melewati gang-gang kota. Kabut terangkat, huruf-huruf kembali ke halaman, dan nama-nama yang sempat terlupa terdengar lagi di setiap rumah.</p><p>Elara menunggumu di gerbang arsip. Ia tersenyum, lalu membuka jurnal yang kamu bawa.</p><p class="quote">“Sekarang kamu tahu,” katanya, “membaca sandi bukan sekadar menemukan kata. Kadang, itu berarti menemukan jalan pulang.”</p></div><div class="end-rule"></div><div class="ending-keys">${quests.map(q=>`<span class="pill ${q.color}">${icon(q.symbol)} ${q.cipher}</span>`).join('')}</div><p class="secondary">Empat sandi dipahami. Empat kunci ditemukan. Satu kota diselamatkan.</p><div class="actions"><button class="button" id="endJournal">Buka jurnal ${icon('book')}</button><button class="button secondary-button" id="endMap">Jelajahi lagi</button><button class="text-button" id="endReset">Cerita baru</button></div></div></article>`,'ending');bind('endJournal','click',openJournal);bind('endMap','click',map);bind('endReset','click',askReset);
+  function finalStory() {
+    if (!E.canUnlock(state.solved)) {
+      map();
+      return;
+    }
+    show(
+      `<div class="reading-bar"><button class="button ghost" id="finalBack">${icon("back")} Peta perjalanan</button><span class="eyebrow">BAB II / RUANG FAJAR</span></div><article class="book"><div class="book-art">${art("sky", "“Cahaya tidak pernah benar-benar hilang.<br>Ia hanya menunggu untuk ditemukan.”")}<span class="page-badge" aria-hidden="true"><b>4/4</b><span>kunci</span></span></div><div class="book-copy"><span class="eyebrow">Empat kunci, satu pintu</span><h1>Di sini, semua jalan bertemu.</h1><div class="story-text"><p>Kamu meletakkan Kunci Surya, Langit, Akar, dan Pulang pada pintu batu. Keempatnya berputar serentak. Pintu Ruang Fajar terbuka tanpa suara.</p><p>Di tengah ruangan berdiri <b>Lentera Aksara</b>, benda yang selama ini kamu cari. Cahayanya hampir padam, tetapi di dalamnya masih bergerak huruf-huruf kecil, seperti kunang-kunang.</p><p>Di alasnya terukir pesan terakhir Elara:</p><p class="quote">“Kota hidup selama seseorang masih mau menjaga ceritanya. Kini, giliranmu.”</p></div><div class="book-controls"><small>Lentera telah ditemukan.</small><button class="button" id="lightLantern">Nyalakan lentera ${icon("sun")}</button></div></div></article>`,
+      "final",
+    );
+    bind("finalBack", "click", map);
+    bind("lightLantern", "click", () => {
+      if (E.canUnlock(state.solved)) {
+        state.finished = true;
+        save();
+        ending();
+      }
+    });
   }
-  function openJournal(){document.getElementById('journalIntro').textContent=`Penjelajah: ${state.name||'Nara'} · ${state.solved.length} dari 4 kunci ditemukan.`;document.getElementById('journalKeys').innerHTML=quests.map(q=>{const done=state.solved.includes(q.id);return `<div class="journal-key ${done?'':'missing'}"><div class="key-icon">${icon(done?q.symbol:'lock')}</div><div><h3>${done?q.key:'Kunci belum ditemukan'}</h3><p>${q.name} · ${q.cipher}</p></div><span class="pill ${done?'green':''}">${done?'Ditemukan':'Belum'}</span></div>`;}).join('');document.getElementById('saveNote').textContent=storageWorks?'Perjalanan disimpan otomatis di browser ini.':'Penyimpanan tidak tersedia. Progres hanya berlaku selama sesi ini.';document.getElementById('journal').showModal();}
-  function askReset(){document.getElementById('resetDialog').showModal();}
-  bind('brandHome','click',event=>{event.preventDefault();cover();});bind('mapNav','click',map);bind('journalNav','click',openJournal);bind('closeJournal','click',()=>document.getElementById('journal').close());bind('cancelReset','click',()=>document.getElementById('resetDialog').close());bind('cancelResetX','click',()=>document.getElementById('resetDialog').close());bind('confirmReset','click',()=>{state=E.validateState(null);hasSave=false;try{localStorage.removeItem(STORE);}catch{}document.getElementById('resetDialog').close();cover();});
+  function ending() {
+    if (!state.finished) {
+      map();
+      return;
+    }
+    show(
+      `<article class="reward-shell ending"><div class="reward-hero"><div class="ring-art">${art("city")}</div><div class="ring-badge" aria-hidden="true"><b>4/4</b><span>kunci</span></div><div class="key-medallion">${icon("sun")}</div></div><div class="reward-copy"><span class="eyebrow">Epilog</span><span class="script">Cahaya yang pulang</span><h1>Kamu membawa fajar,<br>${player()}.</h1><div class="story-text"><p>Cahaya Lentera Aksara mengalir melewati gang-gang kota. Kabut terangkat, huruf-huruf kembali ke halaman, dan nama-nama yang sempat terlupa terdengar lagi di setiap rumah.</p><p>Elara menunggumu di gerbang arsip. Ia tersenyum, lalu membuka jurnal yang kamu bawa.</p><p class="quote">“Sekarang kamu tahu,” katanya, “membaca sandi bukan sekadar menemukan kata. Kadang, itu berarti menemukan jalan pulang.”</p></div><div class="end-rule"></div><div class="ending-keys">${quests.map((q) => `<span class="pill ${q.color}">${icon(q.symbol)} ${q.cipher}</span>`).join("")}</div><p class="secondary">Empat sandi dipahami. Empat kunci ditemukan. Satu kota diselamatkan.</p><div class="actions"><button class="button" id="endJournal">Buka jurnal ${icon("book")}</button><button class="button secondary-button" id="endMap">Jelajahi lagi</button><button class="text-button" id="endReset">Cerita baru</button></div></div></article>`,
+      "ending",
+    );
+    bind("endJournal", "click", openJournal);
+    bind("endMap", "click", map);
+    bind("endReset", "click", askReset);
+  }
+  function openJournal() {
+    document.getElementById("journalIntro").textContent =
+      `Penjelajah: ${state.name || "Nara"} · ${state.solved.length} dari 4 kunci ditemukan.`;
+    document.getElementById("journalKeys").innerHTML = quests
+      .map((q) => {
+        const done = state.solved.includes(q.id);
+        return `<div class="journal-key ${done ? "" : "missing"}"><div class="key-icon">${icon(done ? q.symbol : "lock")}</div><div><h3>${done ? q.key : "Kunci belum ditemukan"}</h3><p>${q.name} · ${q.cipher}</p></div><span class="pill ${done ? "green" : ""}">${done ? "Ditemukan" : "Belum"}</span></div>`;
+      })
+      .join("");
+    document.getElementById("saveNote").textContent = storageWorks
+      ? "Perjalanan disimpan otomatis di browser ini."
+      : "Penyimpanan tidak tersedia. Progres hanya berlaku selama sesi ini.";
+    document.getElementById("journal").showModal();
+  }
+  function askReset() {
+    document.getElementById("resetDialog").showModal();
+  }
+  bind("brandHome", "click", (event) => {
+    event.preventDefault();
+    cover();
+  });
+  bind("mapNav", "click", map);
+  bind("journalNav", "click", openJournal);
+  bind("closeJournal", "click", () => document.getElementById("journal").close());
+  bind("cancelReset", "click", () => document.getElementById("resetDialog").close());
+  bind("cancelResetX", "click", () => document.getElementById("resetDialog").close());
+  bind("confirmReset", "click", () => {
+    state = E.validateState(null);
+    hasSave = false;
+    try {
+      localStorage.removeItem(STORE);
+    } catch {}
+    document.getElementById("resetDialog").close();
+    cover();
+  });
   cover();
 })();

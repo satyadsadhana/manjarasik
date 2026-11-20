@@ -37,7 +37,10 @@ Sandi klasik di sini digunakan untuk pembelajaran dan bukan untuk melindungi inf
 
 ## Desain
 
-Arahan Apple Design dan UI/UX Pro Max: tipografi sistem, hierarki yang jelas, navigasi transparan, kontrol dengan respons saat ditekan, fokus keyboard, ukuran kontrol nyaman, layout adaptif, serta dukungan reduced motion dan reduced transparency. Ilustrasi dunia dibuat dengan AI. Tidak ada timer atau pembelian petunjuk: fokusnya mengikuti cerita dan memahami sandi.
+- **Palet "Lontar Nusantara":** latar daun lontar `#EBDDB8`, teks cokelat kayu `#3A2617`/`#5A3A22`, aksen soga `#8B5A2B`, bidang nila `#2B3A55`, hiasan prada emas `#C8963E`, peringatan merah bata `#7A2E2A`. Pasangan teks dan latar memenuhi kontras WCAG AA.
+- **Tipografi:** Cinzel (judul ala prasasti), Pinyon Script (kata pembuka bergaya sambung), Cormorant Garamond (teks cerita), dan font sistem untuk antarmuka. Ketiga font berlisensi SIL Open Font License dan disimpan lokal di `assets/fonts/`, jadi tetap tampil tanpa internet.
+- **Elemen bentuk:** tepi kertas sobek, gambar bertepi gelombang, bingkai organik dan lingkaran bercincin emas, lencana bulat, jalur putus-putus, serta hiasan SVG kompas, gulungan, dan bulu pena.
+- Ilustrasi dunia dibuat dengan AI. Tidak ada timer atau pembelian petunjuk: fokusnya mengikuti cerita dan memahami sandi. Mendukung reduced motion, reduced transparency, dan kontras tinggi.
 
 ## Pengujian
 
