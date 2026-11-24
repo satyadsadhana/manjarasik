@@ -2620,3 +2620,56 @@ dialog::backdrop {
   letter-spacing: 0;
   font-family: var(--font);
 }
+
+/* tab alat meja kerja & buku panduan */
+.wb-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.wb-tab {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--soga);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--soga-dark);
+  font: 600 var(--fs-sm) / 1 var(--font);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.wb-tab:hover {
+  background: var(--prada-soft);
+}
+.wb-tab:focus-visible {
+  outline: 2px solid var(--nila);
+  outline-offset: 2px;
+}
+.wb-tab[aria-selected="true"] {
+  background: var(--soga);
+  color: #fff;
+}
+.wb-panel {
+  margin-top: 14px;
+}
+.hb-item {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+}
+.hb-item h4 {
+  margin: 0 0 6px;
+  font-family: var(--display);
+  font-size: 0.95rem;
+  color: var(--kayu);
+}
+.hb-note {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .wb-tab {
+    transition: none;
+  }
+}

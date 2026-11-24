@@ -6,3 +6,7 @@ Thumbs.db
 # Rahasia: kunci jawaban. Hapus dua baris ini jika repo private dan ingin menyimpannya di GitHub.
 JAWABAN.md
 tests/
+
+# Cache Firebase CLI
+.firebase/
+firebase-debug.log

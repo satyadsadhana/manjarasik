@@ -62,6 +62,12 @@
     const el = document.getElementById(id);
     if (el) el.addEventListener(event, fn);
   };
+  // Nama sandi hanya diketahui setelah level terpecahkan (dibuka dari data tersegel).
+  const cipherName = (q) => {
+    if (!state.solved.includes(q.id)) return "";
+    const sec = E.openSecret(q, state.answers[q.id]);
+    return (sec && sec.cipher) || "";
+  };
   const tierDots = (q) =>
     `<span class="tier" aria-label="Tingkat kesulitan ${q.tier} dari 5">${[1, 2, 3, 4, 5].map((i) => `<i class="${i <= q.tier ? "on" : ""}"></i>`).join("")}</span>`;
   const elapsed = () => {
@@ -257,7 +263,7 @@
       .map((q) => {
         const done = state.solved.includes(q.id),
           open = E.isUnlocked(state, q);
-        return `<article class="location ${open ? "" : "locked"} ${done ? "done" : ""}"><div class="scene ${q.scene}" role="img" aria-label="Ilustrasi ${esc(q.name)}">${done ? `<span class="complete-mark" aria-label="Level selesai">${icon("check")}</span>` : ""}${!open ? `<span class="lock-mark" aria-hidden="true">${icon("lock")}</span>` : ""}${q.fragment ? `<span class="shard-tag" title="Menyimpan serpihan">${icon("shard")} Serpihan ${q.fragment}</span>` : ""}</div><div class="location-content"><span class="location-number" aria-label="Level ${q.level}">${q.number}</span><div class="location-meta"><span class="pill ${open ? q.color : ""}">${open ? `${icon(q.symbol)} ${q.cipher}` : `${icon("lock")} Terkunci`}</span>${tierDots(q)}</div><h2>${open ? esc(q.name) : "Lokasi tersembunyi"}</h2><p>${open ? esc(q.subtitle) : `Selesaikan level ${q.level - 1} untuk membuka jalan ke sini.`}</p><div class="location-foot"><span class="points">${done ? `${fmt(state.scores[q.id])} / ${fmt(q.points)} poin` : `${fmt(q.points)} poin`}</span></div><button class="button ${done ? "secondary-button" : ""}" data-visit="${q.id}" ${open ? "" : "disabled"}>${done ? "Lihat catatan" : open ? "Jelajahi" : "Terkunci"} ${icon(done ? "book" : open ? "arrow" : "lock")}</button></div></article>`;
+        return `<article class="location ${open ? "" : "locked"} ${done ? "done" : ""}"><div class="scene ${q.scene}" role="img" aria-label="Ilustrasi ${esc(q.name)}">${done ? `<span class="complete-mark" aria-label="Level selesai">${icon("check")}</span>` : ""}${!open ? `<span class="lock-mark" aria-hidden="true">${icon("lock")}</span>` : ""}${q.fragment ? `<span class="shard-tag" title="Menyimpan serpihan">${icon("shard")} Serpihan ${q.fragment}</span>` : ""}</div><div class="location-content"><span class="location-number" aria-label="Level ${q.level}">${q.number}</span><div class="location-meta"><span class="pill ${open ? q.color : ""}">${open ? `${icon(q.symbol)} ${done ? esc(cipherName(q)) : "Sandi rahasia"}` : `${icon("lock")} Terkunci`}</span>${tierDots(q)}</div><h2>${open ? esc(q.name) : "Lokasi tersembunyi"}</h2><p>${open ? esc(q.subtitle) : `Selesaikan level ${q.level - 1} untuk membuka jalan ke sini.`}</p><div class="location-foot"><span class="points">${done ? `${fmt(state.scores[q.id])} / ${fmt(q.points)} poin` : `${fmt(q.points)} poin`}</span></div><button class="button ${done ? "secondary-button" : ""}" data-visit="${q.id}" ${open ? "" : "disabled"}>${done ? "Lihat catatan" : open ? "Jelajahi" : "Terkunci"} ${icon(done ? "book" : open ? "arrow" : "lock")}</button></div></article>`;
       })
       .join("");
     show(
@@ -285,7 +291,7 @@
       return;
     }
     show(
-      `<div class="reading-bar"><button class="button ghost" id="backMap">${icon("back")} Kembali ke peta</button><span class="pill ${q.color}">Level ${q.level} · ${q.cipher}</span></div><article class="book"><div class="book-art">${art(q.scene, `“${q.clue}”`)}<span class="page-badge" aria-hidden="true"><b>${q.number}</b><span>level</span></span></div><div class="book-copy"><span class="eyebrow">Level ${q.level} dari ${TOTAL} · ${fmt(q.points)} poin</span><span class="script">${q.subtitle}</span><h1>${q.name}</h1>${tierDots(q)}<div class="story-text"><p>${q.text}</p>${q.fragment ? `<p><b>Penjaga di sini menyimpan serpihan ${q.fragment}.</b> Pecahkan sandinya untuk mendapatkannya.</p>` : ""}</div><div class="book-controls"><small>Baca. Pahami. Coba.</small><button class="button" id="beginPuzzle">Periksa sandi ${icon("arrow")}</button></div></div></article>`,
+      `<div class="reading-bar"><button class="button ghost" id="backMap">${icon("back")} Kembali ke peta</button><span class="pill ${q.color}">Level ${q.level} dari ${TOTAL}</span></div><article class="book"><div class="book-art">${art(q.scene, `“${q.clue}”`)}<span class="page-badge" aria-hidden="true"><b>${q.number}</b><span>level</span></span></div><div class="book-copy"><span class="eyebrow">Level ${q.level} dari ${TOTAL} · ${fmt(q.points)} poin</span><span class="script">${q.subtitle}</span><h1>${q.name}</h1>${tierDots(q)}<div class="story-text"><p>${q.text}</p>${q.fragment ? `<p><b>Penjaga di sini menyimpan serpihan ${q.fragment}.</b> Pecahkan sandinya untuk mendapatkannya.</p>` : ""}</div><div class="book-controls"><small>Baca. Pahami. Coba.</small><button class="button" id="beginPuzzle">Periksa sandi ${icon("arrow")}</button></div></div></article>`,
       "location",
     );
     bind("backMap", "click", map);
@@ -309,27 +315,23 @@
   function railDemo() {
     return `<p>Contoh dari materi kuliah, 3 rel: <b>WE ARE DISCOVERED RUN AT ONCE</b> ditulis zig-zag, lalu dibaca per baris menjadi <b>WECRUO ERDSOEERNTNE AIVDAC</b>.</p><div class="alphabet">W . . . E . . . C . . . R . . . U . . . O<br>. E . R . D . S . O . E . E . R . N . T . N . E<br>. . A . . . I . . . V . . . D . . . A . . . C</div><p>Untuk membuka: hitung panjang pesan, gambar pola zig-zag, hitung berapa huruf di tiap rel, potong pesan sesuai jumlah itu, lalu baca mengikuti zig-zag.</p>`;
   }
-  function guide(q) {
-    switch (q.type) {
-      case "caesar-known":
-        return `<p>${q.method} Untuk membaca, mundurkan setiap huruf sebanyak jarak itu. Alfabet berputar: jika melewati A, lanjut dari Z.</p>${TIP}<div class="alphabet">Asli  A B C D E F G H I J K L M<br>      N O P Q R S T U V W X Y Z<br>Sandi D E F G H I J K L M N O P<br>      Q R S T U V W X Y Z A B C</div>`;
-      case "caesar-hidden":
-        return `<p>${q.method} Setelah tahu jaraknya, mundurkan setiap huruf sebanyak itu.</p>${TIP}${NUMBERS}`;
-      case "atbash":
-        return `<p>${q.method} Cari huruf pesan pada salah satu baris, lalu baca huruf pasangannya.</p>${TIP}<div class="alphabet">A B C D E F G H I J K L M<br>Z Y X W V U T S R Q P O N</div>`;
-      case "rail":
-        return `<p>${q.method}</p>${TIP}${railDemo()}`;
-      case "polybius-plain":
-        return `<p>${q.method}</p>${polyTable("", "Kotak Polybius alfabet biasa")}`;
-      case "polybius-key":
-        return `<p>${q.method}</p><p>Contoh susunan dengan kata kunci <b>KOTA</b> (bukan kata kunci peti ini): baris pertama dimulai K, O, T, A, lalu sisa alfabet.</p>${polyTable("KOTA", "Contoh kotak Polybius dengan kata kunci KOTA")}`;
-      case "vigenere":
-        return `<p>${q.method}</p>${TIP}<table class="vtable"><caption>Contoh dengan kata kunci KOTA (bukan kata kunci level ini)</caption><tr><th>Huruf sandi</th><td>Z (25)</td><td>I (8)</td></tr><tr><th>Huruf kunci</th><td>K (10)</td><td>O (14)</td></tr><tr><th>Hasil asli</th><td>P (15)</td><td>U (20)</td></tr></table>${NUMBERS}`;
-      case "double":
-        return `<p>${q.method}</p>${TIP}<p>Ingat: Atbash memasangkan A↔Z, B↔Y, dan seterusnya. Caesar menggeser semua huruf dengan jarak yang sama.</p><div class="alphabet">A B C D E F G H I J K L M<br>Z Y X W V U T S R Q P O N</div>${NUMBERS}`;
-      default:
-        return `<p>${q.method}</p>${TIP}<p><b>Langkah 1, Rail Fence:</b> susun ulang huruf mengikuti pola zig-zag.</p>${railDemo()}<p><b>Langkah 2, Vigenère:</b> kurangi setiap huruf dengan huruf kata kunci yang diulang (A = 0). Jika negatif, tambahkan 26.</p>${NUMBERS}`;
-    }
+  // Buku panduan umum: sama untuk semua level, memakai nama teknik netral
+  // agar pemain tetap harus menebak sandi mana yang dipakai.
+  function handbook() {
+    const sec = (title, body) => `<div class="hb-item"><h4>${title}</h4>${body}</div>`;
+    return `<p>Ada lima teknik dasar. Sebuah level bisa memakai satu teknik atau menggabungkan dua. Tebak sendiri mana yang dipakai.</p>${TIP}${sec(
+      "Geser",
+      `<p>Setiap huruf digeser sejauh jarak yang sama. Untuk membuka, mundurkan sejauh jarak itu; alfabet berputar dari A ke Z.</p><div class="alphabet">Contoh geser 3:<br>Asli  A B C D E F G ...<br>Sandi D E F G H I J ...</div>`,
+    )}${sec("Cermin", `<p>Alfabet dibalik: huruf pertama berpasangan dengan huruf terakhir.</p><div class="alphabet">A B C D E F G H I J K L M<br>Z Y X W V U T S R Q P O N</div>`)}${sec(
+      "Zig-zag",
+      `<p>Huruf ditulis naik-turun di beberapa baris (rel), lalu dibaca baris per baris.</p>${railDemo()}`,
+    )}${sec(
+      "Kotak 5×5",
+      `<p>Setiap huruf menjadi dua angka: baris lalu kolom. Kotak bisa polos (A–Z) atau diawali huruf unik sebuah kata kunci. I dan J berbagi satu sel.</p>${polyTable("KOTA", "Contoh kotak dengan kata kunci KOTA")}<p class="hb-note">Contoh di atas memakai kata kunci KOTA.</p>`,
+    )}${sec(
+      "Kunci berulang",
+      `<p>Setiap huruf digeser berbeda-beda, mengikuti huruf kata kunci yang diulang sepanjang pesan. Untuk membuka: (nilai sandi − nilai kunci + 26) mod 26.</p><table class="vtable"><caption>Contoh dengan kata kunci KOTA</caption><tr><th>Huruf sandi</th><td>Z (25)</td><td>I (8)</td></tr><tr><th>Huruf kunci</th><td>K (10)</td><td>O (14)</td></tr><tr><th>Hasil asli</th><td>P (15)</td><td>U (20)</td></tr></table>${NUMBERS}`,
+    )}<p class="hb-note">Sandi ganda dibuka dari lapisan terakhir.</p>`;
   }
   // ---------- meja kerja (alat bantu interaktif) ----------
   // Membantu menyusun kotak, menggeser alfabet, dan menggambar pola. Kunci tidak pernah diisikan otomatis,
@@ -350,18 +352,10 @@
       localStorage.setItem(WB_KEY, JSON.stringify(all));
     } catch {}
   }
-  const TOOLS = {
-    "caesar-known": ["caesar"],
-    "caesar-hidden": ["caesar"],
-    atbash: ["atbash"],
-    rail: ["rail"],
-    "polybius-plain": ["poly"],
-    "polybius-key": ["poly"],
-    vigenere: ["vig"],
-    double: ["atbash"], // tanpa penggeser: geseran level 9 harus dicari sendiri
-    final: ["rail", "vig"],
-  };
-  const isPairs = (q) => q.type.startsWith("polybius");
+  // Semua alat tersedia di setiap level, supaya alat tidak membocorkan jenis sandinya.
+  const ALL_TOOLS = ["caesar", "atbash", "rail", "poly", "vig"];
+  const TOOL_NAMES = { caesar: "Geser", atbash: "Cermin", rail: "Zig-zag", poly: "Kotak 5×5", vig: "Kunci berulang" };
+  const isPairs = (q) => E.isPairs(q);
   const AZL = E.AZ.split("");
   function alphaRows(top, bottom, labels, hit) {
     const block = (s, e) =>
@@ -388,7 +382,7 @@
       const key = E.normalize(st.key).replace(/J/g, "I"),
         g = E.grid(key),
         unique = new Set(key).size;
-      return `<div class="wb-grid" role="grid" aria-label="Kotak Polybius dari kata kunci ${esc(key || "kosong")}"><span class="axis"></span>${[1, 2, 3, 4, 5].map((v) => `<span class="axis">${v}</span>`).join("")}${[0, 1, 2, 3, 4]
+      return `<div class="wb-grid" role="grid" aria-label="Kotak 5×5 dari kata kunci ${esc(key || "kosong")}"><span class="axis"></span>${[1, 2, 3, 4, 5].map((v) => `<span class="axis">${v}</span>`).join("")}${[0, 1, 2, 3, 4]
         .map(
           (r) =>
             `<span class="axis">${r + 1}</span>${g
@@ -431,7 +425,6 @@
     return "";
   }
   function workbench(q) {
-    const tools = TOOLS[q.type] || [];
     const tokens = isPairs(q)
       ? q.ciphertext
           .split(" ")
@@ -447,31 +440,49 @@
     const control = {
       caesar: `<div class="wb-control"><label for="wbShift">Geseran</label><input type="range" id="wbShift" min="0" max="25" step="1"><output id="wbShiftOut">0</output></div>`,
       atbash: `<div class="wb-control"><span class="wb-control-label">Pasangan cermin A↔Z</span></div>`,
-      poly: `<div class="wb-control"><label for="wbKey">Kata kunci kotak</label><input class="input" id="wbKey" maxlength="25" autocomplete="off" spellcheck="false" placeholder="${q.type === "polybius-plain" ? "Kosongkan untuk kotak polos" : "Ketik kata kunci yang kalian temukan"}"></div>`,
-      vig: `<div class="wb-control"><label for="wbVkey">Kata kunci Vigenère</label><input class="input" id="wbVkey" maxlength="25" autocomplete="off" spellcheck="false" placeholder="Ketik kata kunci yang kalian temukan"></div>`,
+      poly: `<div class="wb-control"><label for="wbKey">Kata kunci kotak</label><input class="input" id="wbKey" maxlength="25" autocomplete="off" spellcheck="false" placeholder="Ketik kata kunci, atau kosongkan untuk kotak polos"></div>`,
+      vig: `<div class="wb-control"><label for="wbVkey">Kata kunci</label><input class="input" id="wbVkey" maxlength="25" autocomplete="off" spellcheck="false" placeholder="Ketik kata kunci"></div>`,
       rail: `<div class="wb-control"><label for="wbRails">Jumlah rel</label><input type="number" class="input wb-num" id="wbRails" min="2" max="6" step="1"></div>`,
     };
-    const titles = { caesar: "Penggeser Caesar", atbash: "Cermin Atbash", poly: "Kotak Polybius", vig: "Pasangan Vigenère", rail: "Pola Rail Fence" };
-    return `<section class="workbench" aria-labelledby="wbTitle"><div class="wb-head"><span class="eyebrow">Meja kerja</span><h2 id="wbTitle">Alat bantu ${esc(q.cipher)}</h2><p>Ketuk huruf atau angka di pesan untuk menandainya di alat. Alat ini membantu menyusun dan mencocokkan; kuncinya tetap harus kalian temukan, dan menerjemahkan tetap tugas kalian.</p></div><div class="wb-tokens" id="wbTokens" aria-label="Pesan sandi, ketuk untuk menandai">${tokens}</div>${tools
-      .map((t) => `<div class="wb-tool"><h3>${titles[t]}</h3>${control[t]}<div class="wb-out" id="wbOut-${t}" aria-live="polite"></div></div>`)
-      .join("")}<div class="wb-tool"><h3><label for="wbNotes">Coretan</label></h3><textarea class="input wb-notes" id="wbNotes" rows="3" maxlength="600" spellcheck="false" placeholder="Tulis hasil sementara di sini. Coretan tersimpan di browser ini."></textarea></div></section>`;
+    return `<section class="workbench" aria-labelledby="wbTitle"><div class="wb-head"><span class="eyebrow">Meja kerja</span><h2 id="wbTitle">Alat bantu</h2><p>Pilih alat yang menurut kalian cocok dengan sandi ini; semua alat tersedia di setiap level. Ketuk huruf atau angka di pesan untuk menandainya. Alat hanya membantu menyusun dan mencocokkan: kunci dan terjemahannya tetap tugas kalian.</p></div><div class="wb-tokens" id="wbTokens" aria-label="Pesan sandi, ketuk untuk menandai">${tokens}</div><div class="wb-tabs" role="tablist" aria-label="Pilih alat">${ALL_TOOLS.map(
+      (t) => `<button type="button" class="wb-tab" role="tab" id="wbTab-${t}" data-tool="${t}" aria-controls="wbPanel-${t}" aria-selected="false">${TOOL_NAMES[t]}</button>`,
+    ).join("")}</div>${ALL_TOOLS.map(
+      (t) => `<div class="wb-tool wb-panel" role="tabpanel" id="wbPanel-${t}" aria-labelledby="wbTab-${t}" hidden>${control[t]}<div class="wb-out" id="wbOut-${t}" aria-live="polite"></div></div>`,
+    ).join("")}<div class="wb-tool"><h3><label for="wbNotes">Coretan</label></h3><textarea class="input wb-notes" id="wbNotes" rows="3" maxlength="600" spellcheck="false" placeholder="Tulis hasil sementara di sini. Coretan tersimpan di browser ini."></textarea></div></section>`;
   }
   function bindWorkbench(q) {
-    const tools = TOOLS[q.type] || [];
     const saved = wbLoad(q.id);
     const clampInt = (v, lo, hi, d) => {
       const n = parseInt(v, 10);
       return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : d;
     };
     const st = {
-      shift: clampInt(saved.shift, 0, 25, q.type === "caesar-known" ? 3 : 0),
+      shift: clampInt(saved.shift, 0, 25, 0),
       key: typeof saved.key === "string" ? saved.key.slice(0, 25) : "",
       vkey: typeof saved.vkey === "string" ? saved.vkey.slice(0, 25) : "",
       rails: clampInt(saved.rails, 2, 6, 2),
+      tab: ALL_TOOLS.includes(saved.tab) ? saved.tab : "",
     };
     let sel = null;
+    const showTab = (t) => {
+      st.tab = t;
+      ALL_TOOLS.forEach((x) => {
+        const tab = document.getElementById("wbTab-" + x),
+          panel = document.getElementById("wbPanel-" + x);
+        if (tab) tab.setAttribute("aria-selected", String(x === t));
+        if (panel) panel.hidden = x !== t;
+      });
+    };
+    ALL_TOOLS.forEach((t) =>
+      bind("wbTab-" + t, "click", () => {
+        const next = st.tab === t ? "" : t;
+        showTab(next);
+        wbSave(q.id, { tab: next });
+      }),
+    );
+    showTab(st.tab);
     const draw = () => {
-      tools.forEach((t) => {
+      ALL_TOOLS.forEach((t) => {
         const out = document.getElementById("wbOut-" + t);
         if (out) out.innerHTML = wbRender(t, q, st, sel);
       });
@@ -535,11 +546,11 @@
       .map((h, i) => `<p><b>Petunjuk ${i + 1}.</b> ${esc(h)}</p>`)
       .join("");
     const shards =
-      q.final || q.type === "final"
+      q.final
         ? `<div class="lesson-box"><h2>Serpihan yang kalian bawa</h2>${fragmentStrip()}</div>`
         : "";
     show(
-      `<div class="puzzle-header"><button class="button ghost" id="backLocation">${icon("back")} Cerita lokasi</button><span class="pill ${q.color}">${icon(q.symbol)} Level ${q.level} · ${esc(q.name)}</span></div><div class="puzzle-layout"><aside class="puzzle-side"><div class="lore-art">${art(q.scene)}</div><div class="puzzle-lore"><span class="eyebrow">Level ${q.number} · ${esc(q.name)}</span><h2>Pesan Elara</h2><blockquote><p>${elaraNote(q)}</p></blockquote><div class="score-card"><span>Poin level ini</span><b id="levelPoints">${fmt(E.levelScore(q, used, wrong))}</b><small>dari ${fmt(q.points)}</small></div></div></aside><section class="puzzle-work" aria-labelledby="puzzleTitle"><div class="location-meta"><span class="pill ${q.color}">Sandi ${q.cipher}</span>${tierDots(q)}</div><h1 id="puzzleTitle">Apa pesan di balik sandi?</h1><p class="secondary">Buka catatan cara membaca jika ini pertama kalinya kalian menjumpai sandi ${q.cipher}.</p><div class="cipher-box"><div class="cipher-label">PESAN YANG DITEMUKAN</div><div class="cipher-code" aria-label="Pesan sandi ${q.ciphertext}">${q.ciphertext}</div><p class="cipher-clue">“${q.clue}”</p></div>${shards}${workbench(q)}<form id="answerForm" class="answer-form"><label for="answer">Pesan yang kalian temukan</label><div class="answer-row"><input class="input" id="answer" autocomplete="off" spellcheck="false" maxlength="80" aria-describedby="answerHelp answerFeedback" placeholder="Tulis seluruh pesan"><button class="button" type="submit">Buka kunci ${icon("key")}</button></div><p class="helper-text" id="answerHelp">Spasi, tanda baca, dan huruf besar/kecil diabaikan. Jawaban salah −${E.WRONG_PENALTY} poin.</p><p class="feedback" id="answerFeedback" role="alert"></p></form><div class="hint-row"><button class="text-button" id="hintButton" ${used >= q.hints.length ? "disabled" : ""}>${used >= q.hints.length ? "Semua petunjuk terbuka" : used ? "Petunjuk berikutnya" : "Butuh petunjuk?"} (−${penaltyHint} poin)</button><span id="hintCount">${used} dari ${q.hints.length} petunjuk</span></div><div id="hintBox" class="hint-box" role="status" ${used ? "" : "hidden"}>${hintHtml}</div><details class="guide"><summary>Cara membaca sandi ${q.cipher}</summary>${guide(q)}</details></section></div>`,
+      `<div class="puzzle-header"><button class="button ghost" id="backLocation">${icon("back")} Cerita lokasi</button><span class="pill ${q.color}">${icon(q.symbol)} Level ${q.level} · ${esc(q.name)}</span></div><div class="puzzle-layout"><aside class="puzzle-side"><div class="lore-art">${art(q.scene)}</div><div class="puzzle-lore"><span class="eyebrow">Level ${q.number} · ${esc(q.name)}</span><h2>Pesan Elara</h2><blockquote><p>${elaraNote(q)}</p></blockquote><div class="score-card"><span>Poin level ini</span><b id="levelPoints">${fmt(E.levelScore(q, used, wrong))}</b><small>dari ${fmt(q.points)}</small></div></div></aside><section class="puzzle-work" aria-labelledby="puzzleTitle"><div class="location-meta"><span class="pill ${q.color}">Sandi rahasia</span>${tierDots(q)}</div><h1 id="puzzleTitle">Apa pesan di balik sandi?</h1><p class="secondary">Sandi apa yang dipakai di sini? Tebak dari bentuk pesannya, lalu pilih alat di meja kerja atau buka buku panduan.</p><div class="cipher-box"><div class="cipher-label">PESAN YANG DITEMUKAN</div><div class="cipher-code" aria-label="Pesan sandi ${q.ciphertext}">${q.ciphertext}</div><p class="cipher-clue">“${q.clue}”</p></div>${shards}${workbench(q)}<form id="answerForm" class="answer-form"><label for="answer">Pesan yang kalian temukan</label><div class="answer-row"><input class="input" id="answer" autocomplete="off" spellcheck="false" maxlength="80" aria-describedby="answerHelp answerFeedback" placeholder="Tulis seluruh pesan"><button class="button" type="submit">Buka kunci ${icon("key")}</button></div><p class="helper-text" id="answerHelp">Spasi, tanda baca, dan huruf besar/kecil diabaikan. Jawaban salah −${E.WRONG_PENALTY} poin.</p><p class="feedback" id="answerFeedback" role="alert"></p></form><div class="hint-row"><button class="text-button" id="hintButton" ${used >= q.hints.length ? "disabled" : ""}>${used >= q.hints.length ? "Semua petunjuk terbuka" : used ? "Petunjuk berikutnya" : "Butuh petunjuk?"} (−${penaltyHint} poin)</button><span id="hintCount">${used} dari ${q.hints.length} petunjuk</span></div><div id="hintBox" class="hint-box" role="status" ${used ? "" : "hidden"}>${hintHtml}</div><details class="guide"><summary>Buku panduan sandi</summary>${handbook()}</details></section></div>`,
       "puzzle",
     );
     bind("backLocation", "click", () => visit(q.id));
@@ -608,7 +619,7 @@
       secret = E.openSecret(q, state.answers[q.id]) || {},
       next = quests[q.level];
     show(
-      `<article class="reward-shell"><div class="reward-hero"><div class="ring-art">${art(q.scene)}</div><div class="ring-badge" aria-hidden="true"><b>${n}/${TOTAL}</b><span>level</span></div><div class="key-medallion">${icon(q.symbol)}</div></div><div class="reward-copy"><span class="script">Level ${q.level} terpecahkan</span><h1>${q.key}</h1><div class="story-text"><p>${q.reward}</p></div><div class="actions"><span class="pill ${q.color}">${icon("check")} +${fmt(state.scores[q.id])} poin</span><span class="pill">${fmt(E.totalScore(state))} poin total</span></div>${secret.fragment ? `<div class="fragment-reveal"><span class="eyebrow">Serpihan ${q.fragment} dari 4 ditemukan</span><div class="fragment-stone">${esc(secret.fragment)}</div><p>Simpan serpihan ini. Di Ruang Fajar, keempat serpihan disatukan sesuai nomornya.</p></div>` : ""}<div class="lesson-box"><h2>Yang kalian pelajari · ${q.cipher}</h2><p>${esc(secret.lesson || "")}</p></div><div class="actions"><button class="button" id="continueMap">${next && E.isUnlocked(state, next) && !state.solved.includes(next.id) ? `Lanjut ke level ${next.level}` : "Kembali ke peta"} ${icon("arrow")}</button><button class="text-button" id="toMap">Peta</button></div></div></article>`,
+      `<article class="reward-shell"><div class="reward-hero"><div class="ring-art">${art(q.scene)}</div><div class="ring-badge" aria-hidden="true"><b>${n}/${TOTAL}</b><span>level</span></div><div class="key-medallion">${icon(q.symbol)}</div></div><div class="reward-copy"><span class="script">Level ${q.level} terpecahkan</span><h1>${q.key}</h1><div class="story-text"><p>${q.reward}</p></div><div class="actions"><span class="pill ${q.color}">${icon("check")} +${fmt(state.scores[q.id])} poin</span><span class="pill">${fmt(E.totalScore(state))} poin total</span></div>${secret.fragment ? `<div class="fragment-reveal"><span class="eyebrow">Serpihan ${q.fragment} dari 4 ditemukan</span><div class="fragment-stone">${esc(secret.fragment)}</div><p>Simpan serpihan ini. Di Ruang Fajar, keempat serpihan disatukan sesuai nomornya.</p></div>` : ""}<div class="lesson-box"><h2>Sandinya: ${esc(secret.cipher || "")}</h2><p>${esc(secret.lesson || "")}</p></div><div class="actions"><button class="button" id="continueMap">${next && E.isUnlocked(state, next) && !state.solved.includes(next.id) ? `Lanjut ke level ${next.level}` : "Kembali ke peta"} ${icon("arrow")}</button><button class="text-button" id="toMap">Peta</button></div></div></article>`,
       "reward",
     );
     bind("continueMap", "click", () => (next && E.isUnlocked(state, next) && !state.solved.includes(next.id) ? visit(next.id) : map()));
@@ -622,7 +633,7 @@
     }
     const secret = E.openSecret(finalQ, state.answers[finalQ.id]) || {};
     show(
-      `<div class="reading-bar"><button class="button ghost" id="finalBack">${icon("back")} Peta perjalanan</button><span class="eyebrow">BAB II / RUANG FAJAR</span></div><article class="book"><div class="book-art">${art("sky", "“Cahaya tidak pernah benar-benar hilang.<br>Ia hanya menunggu untuk ditemukan.”")}<span class="page-badge" aria-hidden="true"><b>10</b><span>level</span></span></div><div class="book-copy"><span class="eyebrow">Empat serpihan, satu pintu · +${fmt(state.scores[finalQ.id])} poin</span><h1>Di sini, semua jalan bertemu.</h1><div class="story-text"><p>${finalQ.reward}</p><p>Di tengah ruangan berdiri <b>Lentera Aksara</b>. Cahayanya hampir padam, tetapi di dalamnya masih bergerak huruf-huruf kecil, seperti kunang-kunang.</p><p>Di alasnya terukir pesan terakhir Elara:</p><p class="quote">“Kota hidup selama seseorang masih mau menjaga ceritanya. Kini, giliran kalian.”</p></div><div class="lesson-box"><h2>Yang kalian pelajari · ${finalQ.cipher}</h2><p>${esc(secret.lesson || "")}</p></div><div class="book-controls"><small>Lentera telah ditemukan.</small><button class="button" id="lightLantern">Nyalakan lentera ${icon("sun")}</button></div></div></article>`,
+      `<div class="reading-bar"><button class="button ghost" id="finalBack">${icon("back")} Peta perjalanan</button><span class="eyebrow">BAB II / RUANG FAJAR</span></div><article class="book"><div class="book-art">${art("sky", "“Cahaya tidak pernah benar-benar hilang.<br>Ia hanya menunggu untuk ditemukan.”")}<span class="page-badge" aria-hidden="true"><b>10</b><span>level</span></span></div><div class="book-copy"><span class="eyebrow">Empat serpihan, satu pintu · +${fmt(state.scores[finalQ.id])} poin</span><h1>Di sini, semua jalan bertemu.</h1><div class="story-text"><p>${finalQ.reward}</p><p>Di tengah ruangan berdiri <b>Lentera Aksara</b>. Cahayanya hampir padam, tetapi di dalamnya masih bergerak huruf-huruf kecil, seperti kunang-kunang.</p><p>Di alasnya terukir pesan terakhir Elara:</p><p class="quote">“Kota hidup selama seseorang masih mau menjaga ceritanya. Kini, giliran kalian.”</p></div><div class="lesson-box"><h2>Sandinya: ${esc(secret.cipher || "")}</h2><p>${esc(secret.lesson || "")}</p></div><div class="book-controls"><small>Lentera telah ditemukan.</small><button class="button" id="lightLantern">Nyalakan lentera ${icon("sun")}</button></div></div></article>`,
       "final",
     );
     bind("finalBack", "click", map);
@@ -634,7 +645,7 @@
       return;
     }
     show(
-      `<article class="reward-shell ending"><div class="reward-hero"><div class="ring-art">${art("city")}</div><div class="ring-badge" aria-hidden="true"><b>${TOTAL}/${TOTAL}</b><span>level</span></div><div class="key-medallion">${icon("sun")}</div></div><div class="reward-copy"><span class="eyebrow">Epilog</span><span class="script">Cahaya yang pulang</span><h1>Kalian membawa fajar,<br>${team()}.</h1><div class="story-text"><p>Cahaya Lentera Aksara mengalir melewati gang-gang kota. Kabut terangkat, huruf-huruf kembali ke halaman, dan nama-nama yang sempat terlupa terdengar lagi di setiap rumah.</p><p class="quote">“Sekarang kalian tahu,” kata Elara, “membaca sandi bukan sekadar menemukan kata. Kadang, itu berarti menemukan jalan pulang.”</p></div><div class="end-rule"></div><div class="final-stats"><div><span>Skor akhir</span><b>${fmt(E.totalScore(state))}</b><small>dari ${fmt(E.MAX_SCORE)}</small></div><div><span>Waktu</span><b>${clock(elapsed())}</b><small>sejak mendaftar</small></div><div><span>Petunjuk</span><b>${Object.values(state.hints).reduce((a, b) => a + b, 0)}</b><small>dibuka</small></div></div><div class="ending-keys">${[...new Set(quests.map((q) => q.cipher.split(" + ")).flat())].map((c) => `<span class="pill">${esc(c)}</span>`).join("")}</div><div class="actions"><button class="button" id="endBoard">${icon("trophy")} Lihat papan skor</button><button class="button secondary-button" id="endMap">Peta</button><button class="text-button" id="endReset">Main lagi</button></div></div></article>`,
+      `<article class="reward-shell ending"><div class="reward-hero"><div class="ring-art">${art("city")}</div><div class="ring-badge" aria-hidden="true"><b>${TOTAL}/${TOTAL}</b><span>level</span></div><div class="key-medallion">${icon("sun")}</div></div><div class="reward-copy"><span class="eyebrow">Epilog</span><span class="script">Cahaya yang pulang</span><h1>Kalian membawa fajar,<br>${team()}.</h1><div class="story-text"><p>Cahaya Lentera Aksara mengalir melewati gang-gang kota. Kabut terangkat, huruf-huruf kembali ke halaman, dan nama-nama yang sempat terlupa terdengar lagi di setiap rumah.</p><p class="quote">“Sekarang kalian tahu,” kata Elara, “membaca sandi bukan sekadar menemukan kata. Kadang, itu berarti menemukan jalan pulang.”</p></div><div class="end-rule"></div><div class="final-stats"><div><span>Skor akhir</span><b>${fmt(E.totalScore(state))}</b><small>dari ${fmt(E.MAX_SCORE)}</small></div><div><span>Waktu</span><b>${clock(elapsed())}</b><small>sejak mendaftar</small></div><div><span>Petunjuk</span><b>${Object.values(state.hints).reduce((a, b) => a + b, 0)}</b><small>dibuka</small></div></div><div class="ending-keys">${[...new Set(quests.map((q) => cipherName(q).split(" + ")).flat().filter(Boolean))].map((c) => `<span class="pill">${esc(c)}</span>`).join("")}</div><div class="actions"><button class="button" id="endBoard">${icon("trophy")} Lihat papan skor</button><button class="button secondary-button" id="endMap">Peta</button><button class="text-button" id="endReset">Main lagi</button></div></div></article>`,
       "ending",
     );
     bind("endBoard", "click", leaderboard);
@@ -687,7 +698,7 @@
         .map((q) => {
           const done = state.solved.includes(q.id),
             open = E.isUnlocked(state, q);
-          return `<div class="journal-key ${done ? "" : "missing"}"><div class="key-icon">${icon(done ? q.symbol : "lock")}</div><div><h3>${q.number} · ${open ? esc(q.name) : "Lokasi tersembunyi"}</h3><p>${open ? q.cipher : "Belum terbuka"}${done ? ` · ${fmt(state.scores[q.id])} poin` : ""}</p></div><span class="pill ${done ? "green" : ""}">${done ? "Selesai" : open ? "Terbuka" : "Terkunci"}</span></div>`;
+          return `<div class="journal-key ${done ? "" : "missing"}"><div class="key-icon">${icon(done ? q.symbol : "lock")}</div><div><h3>${q.number} · ${open ? esc(q.name) : "Lokasi tersembunyi"}</h3><p>${done ? esc(cipherName(q)) : open ? "Sandi belum terpecahkan" : "Belum terbuka"}${done ? ` · ${fmt(state.scores[q.id])} poin` : ""}</p></div><span class="pill ${done ? "green" : ""}">${done ? "Selesai" : open ? "Terbuka" : "Terkunci"}</span></div>`;
         })
         .join("");
     document.getElementById("saveNote").textContent = storageWorks
