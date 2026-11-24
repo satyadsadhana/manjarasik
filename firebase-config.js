@@ -3,7 +3,7 @@
    Kosongkan untuk memakai papan skor lokal (hanya tersimpan di browser ini).
    apiKey Firebase untuk web memang boleh terlihat publik; keamanannya diatur lewat Firestore Rules (lihat FIREBASE.md). */
 window.KOTA_FIREBASE = {
-  apiKey: "",
-  projectId: "",
+  apiKey: "AIzaSyDyybVEO8dE2_kpavKeddBhjEds7C2WIZ4",
+  projectId: "kota-aksara-manjar",
   collection: "leaderboard",
 };
