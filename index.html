@@ -10,6 +10,8 @@
   <link rel="preload" href="assets/fonts/pinyon-script.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
   <script src="engine.js" defer></script>
+  <script src="firebase-config.js" defer></script>
+  <script src="leaderboard.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -19,7 +21,8 @@
     <span class="edition">Petualangan sandi</span>
     <nav aria-label="Navigasi petualangan">
       <button class="nav-button" id="mapNav">Peta</button>
-      <button class="nav-button" id="journalNav">Jurnal <span id="keyCount" class="count">0/4</span></button>
+      <button class="nav-button" id="boardNav">Skor <span id="scoreCount" class="count">0</span></button>
+      <button class="nav-button" id="journalNav">Jurnal <span id="keyCount" class="count">0/10</span></button>
     </nav>
   </header>
   <main id="main" tabindex="-1"></main>
@@ -27,16 +30,16 @@
     <div class="footer-inner">
       <div class="footer-brand"><img src="assets/emblem.svg" alt="" width="40" height="40"><div><b>Kota Aksara</b><span>Sebuah petualangan sandi</span></div></div>
       <p class="footer-script" aria-hidden="true">Jelajahi, pahami, pecahkan</p>
-      <div class="footer-meta"><span>Cerita fiksi. Sandi nyata.</span><span>Caesar · Atbash · Polybius · Vigenère</span></div>
+      <div class="footer-meta"><span>Cerita fiksi. Sandi nyata.</span><span>Caesar · Atbash · Rail Fence · Polybius · Vigenère</span></div>
     </div>
   </footer>
   <dialog id="journal" aria-labelledby="journalTitle">
     <div class="dialog-head"><div><span class="eyebrow">CATATAN PENJELAJAH</span><h2 id="journalTitle">Jurnal perjalanan</h2></div><button class="close" aria-label="Tutup jurnal" id="closeJournal">×</button></div>
     <p class="secondary" id="journalIntro"></p><div id="journalKeys"></div>
-    <div class="journal-note"><h3>Tugasmu</h3><p>Temukan empat kunci penjaga. Setelah semuanya terkumpul, Ruang Fajar akan terbuka dan Lentera Aksara dapat dinyalakan kembali.</p></div>
+    <div class="journal-note"><h3>Tugasmu</h3><p>Pecahkan sepuluh sandi berantai. Jawaban setiap level adalah kunci level berikutnya. Kumpulkan empat serpihan batu, satukan sesuai nomornya, lalu buka Ruang Fajar.</p></div>
     <p class="save-note" id="saveNote">Perjalanan disimpan otomatis di browser ini.</p>
   </dialog>
-  <dialog id="resetDialog" aria-labelledby="resetTitle"><div class="dialog-head"><h2 id="resetTitle">Mulai dari awal?</h2><button class="close" id="cancelResetX" aria-label="Batalkan">×</button></div><p>Progres dan kunci perjalanan ini akan dihapus. Kamu akan kembali ke halaman perkenalan.</p><div class="actions"><button class="button secondary-button" id="cancelReset">Kembali</button><button class="button danger" id="confirmReset">Mulai ulang</button></div></dialog>
+  <dialog id="resetDialog" aria-labelledby="resetTitle"><div class="dialog-head"><h2 id="resetTitle">Mulai dari awal?</h2><button class="close" id="cancelResetX" aria-label="Batalkan">×</button></div><p>Progres di browser ini akan dihapus dan kalian kembali ke halaman pendaftaran. Skor yang sudah tercatat di papan skor tetap ada.</p><div class="actions"><button class="button secondary-button" id="cancelReset">Kembali</button><button class="button danger" id="confirmReset">Mulai ulang</button></div></dialog>
   <div id="announcement" class="sr" role="status" aria-live="polite"></div>
 </body>
 </html>
